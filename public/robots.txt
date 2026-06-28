@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://careerlingo.vercel.app/sitemap.xml

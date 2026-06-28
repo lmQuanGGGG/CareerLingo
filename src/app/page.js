@@ -1575,9 +1575,7 @@ export default function App() {
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center rotate-3 shadow-lg shadow-blue-500/30">
-              <Compass className="w-10 h-10 text-white -rotate-3" />
-            </div>
+            <img src="/icon.png" alt="CareerLingo" className="w-12 h-12 rounded-xl shadow-md object-cover" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             CareerLingo
@@ -1669,8 +1667,8 @@ export default function App() {
       
       <header className="sticky top-0 z-50 bg-[#FFFFFF]/80 backdrop-blur-md border-b border-gray-200 px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink min-w-0">
-          <div className="bg-[#0071E3] p-2 sm:p-2.5 rounded-lg shadow-md shrink-0">
-            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="shrink-0">
+            <img src="/icon.png" alt="CareerLingo" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg shadow-sm object-cover" />
           </div>
           <div className="min-w-0">
             <h1 className="text-sm sm:text-lg lg:text-xl font-bold tracking-tight text-[#1D1D1F] truncate">
