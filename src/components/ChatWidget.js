@@ -37,16 +37,21 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
       setIsLoadingRecent(true);
       const { data: recentMsgs, error } = await supabase
         .from('messages')
-        .select('sender_id, receiver_id')
+        .select('sender_id, receiver_id, content, created_at')
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false })
         .limit(100);
         
       if (!error && recentMsgs) {
         const uniqueUserIds = new Set();
+        const latestMsgsMap = {};
+        
         recentMsgs.forEach(msg => {
-          if (msg.sender_id !== user.id) uniqueUserIds.add(msg.sender_id);
-          if (msg.receiver_id !== user.id) uniqueUserIds.add(msg.receiver_id);
+          const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+          if (!uniqueUserIds.has(otherId)) {
+            uniqueUserIds.add(otherId);
+            latestMsgsMap[otherId] = msg;
+          }
         });
         
         const chatUserIds = Array.from(uniqueUserIds);
@@ -58,7 +63,10 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
             .in('id', chatUserIds);
             
           if (usersData) {
-            usersData.sort((a, b) => chatUserIds.indexOf(a.id) - chatUserIds.indexOf(b.id));
+            usersData.forEach(u => {
+              u.latestMessage = latestMsgsMap[u.id];
+            });
+            usersData.sort((a, b) => new Date(b.latestMessage.created_at) - new Date(a.latestMessage.created_at));
             setRecentChats(usersData);
           }
         } else {
@@ -281,7 +289,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
       
       {/* Chat Window Popup */}
       {isOpen && (
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-[90vw] sm:w-[350px] h-[500px] max-h-[70vh] mb-4 flex flex-col overflow-hidden animate-fadeIn origin-bottom-right">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-[90vw] sm:w-[350px] h-[500px] max-h-[70dvh] sm:max-h-[70vh] mb-4 flex flex-col overflow-hidden animate-fadeIn origin-bottom-right">
           
           {/* Header */}
           <div className="bg-[#1D1D1F] text-white p-4 flex justify-between items-center shrink-0">
@@ -376,8 +384,22 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                           </div>
                         )}
                         <div className="flex-1 truncate">
-                          <h4 className="font-semibold text-sm text-gray-900 truncate capitalize">{u.display_name}</h4>
-                          <p className="text-xs text-gray-500">Nhấn để nhắn tin</p>
+                          <div className="flex justify-between items-baseline mb-0.5">
+                            <h4 className="font-semibold text-sm text-gray-900 truncate capitalize">{u.display_name}</h4>
+                            {u.latestMessage && (
+                              <span className="text-[10px] text-gray-400 shrink-0 ml-2">
+                                {new Date(u.latestMessage.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}
+                              </span>
+                            )}
+                          </div>
+                          {u.latestMessage ? (
+                            <p className="text-xs text-gray-500 truncate">
+                              {u.latestMessage.sender_id === user.id ? 'Bạn: ' : ''}
+                              {u.latestMessage.content.startsWith('[VOCAB_CARD]') ? 'Đã chia sẻ một từ vựng' : u.latestMessage.content}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-500 truncate">Nhấn để nhắn tin</p>
+                          )}
                         </div>
                       </button>
                     ))
@@ -447,6 +469,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                             placeholder="Tìm từ vựng..." 
                             value={vocabSearchQuery}
                             onChange={(e) => setVocabSearchQuery(e.target.value)}
+                            onFocus={() => setTimeout(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, 300)}
                             className="w-full bg-gray-50 rounded-lg py-1.5 pl-7 pr-2 text-xs outline-none focus:ring-1 focus:ring-gray-300 transition-all"
                           />
                         </div>
@@ -503,6 +526,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                       type="text" 
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
+                      onFocus={() => setTimeout(scrollToBottom, 300)}
                       placeholder="Nhắn tin..." 
                       className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:bg-gray-50 border border-transparent focus:border-gray-300 transition-colors"
                     />
