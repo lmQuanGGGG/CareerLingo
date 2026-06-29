@@ -1805,6 +1805,14 @@ export default function App() {
   }, [careerTrack]);
 
   useEffect(() => {
+    setShuffledFlashcards(CURRENT_VOCAB);
+    setCurrentFlashcardIndex(0);
+    setFlashcardWrongAttempts([]);
+    setFlashcardCorrectAttempt(null);
+    setCurrentFlashcardOptions([]);
+  }, [CURRENT_VOCAB]);
+
+  useEffect(() => {
     const savedCompletedDays = localStorage.getItem(COMPLETED_DAYS_KEY);
     if (savedCompletedDays) setCompletedDays(JSON.parse(savedCompletedDays));
 
