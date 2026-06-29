@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/web-push/send-reminders",
-      "schedule": "0 13 * * *"
+      "schedule": "0,30 13-16 * * *"
     },
     {
       "path": "/api/cron/process-streaks",
