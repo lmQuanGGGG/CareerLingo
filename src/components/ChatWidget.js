@@ -329,9 +329,13 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
                           onClick={() => openChatWithUser(u)}
                           className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors text-left"
                         >
-                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize">
-                            {u.display_name?.charAt(0)?.toUpperCase() || '?'}
-                          </div>
+                          {u.avatar_url ? (
+                            <img src={u.avatar_url} alt={u.display_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize">
+                              {u.display_name?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                          )}
                           <div className="flex-1 truncate">
                             <h4 className="font-semibold text-sm text-gray-900 truncate capitalize">{u.display_name}</h4>
                             <p className="text-xs text-gray-500">Nhấn để nhắn tin</p>
@@ -352,9 +356,13 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
                         onClick={() => openChatWithUser(u)}
                         className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors text-left"
                       >
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize">
-                          {u.display_name?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
+                        {u.avatar_url ? (
+                          <img src={u.avatar_url} alt={u.display_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize">
+                            {u.display_name?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                        )}
                         <div className="flex-1 truncate">
                           <h4 className="font-semibold text-sm text-gray-900 truncate capitalize">{u.display_name}</h4>
                           <p className="text-xs text-gray-500">Nhấn để nhắn tin</p>
@@ -388,9 +396,13 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
                       return (
                         <div key={msg.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-2`}>
                           {!isMe && (
-                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize mr-2 mt-auto">
-                              {activeChatUser?.display_name?.charAt(0)?.toUpperCase() || '?'}
-                            </div>
+                            activeChatUser?.avatar_url ? (
+                              <img src={activeChatUser.avatar_url} alt={activeChatUser.display_name} className="w-8 h-8 rounded-full object-cover shrink-0 mr-2 mt-auto" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize mr-2 mt-auto">
+                                {activeChatUser?.display_name?.charAt(0)?.toUpperCase() || '?'}
+                              </div>
+                            )
                           )}
                           <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
                             <div className={`rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-[#1D1D1F] text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'}`}>
