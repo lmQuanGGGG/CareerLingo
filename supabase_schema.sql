@@ -58,3 +58,35 @@ order by xp desc;
 -- Cấp quyền đọc View này cho tất cả mọi người
 grant select on public.leaderboard_view to anon, authenticated;
 
+-- ==========================================
+-- LIVE CHAT FEATURE SCHEMA
+-- ==========================================
+
+create table public.messages (
+  id uuid default gen_random_uuid() primary key,
+  sender_id uuid references auth.users not null,
+  receiver_id uuid references auth.users not null,
+  content text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Bật Row Level Security cho bảng messages
+alter table public.messages enable row level security;
+
+-- Cho phép người gửi tạo tin nhắn
+create policy "Users can send messages"
+  on messages for insert
+  with check ( auth.uid() = sender_id );
+
+-- Cho phép người nhận và người gửi xem tin nhắn
+create policy "Users can read own messages"
+  on messages for select
+  using ( auth.uid() = sender_id or auth.uid() = receiver_id );
+
+-- View an toàn để tìm kiếm người dùng (chỉ lấy id, tên, avatar)
+drop view if exists public.chat_users_view;
+create view public.chat_users_view as
+select id, display_name, avatar_url
+from public.user_progress;
+
+grant select on public.chat_users_view to anon, authenticated;

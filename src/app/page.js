@@ -11,6 +11,8 @@ import {
   Sparkles, Check, Copy, X, AlertCircle, Bookmark, BookmarkCheck, ChevronLeft, LogOut, ChevronDown, Smile, Lock, MoreHorizontal, Bell, BellOff, Edit3, ArrowRightLeft
 } from 'lucide-react';
 
+import ChatWidget from '../components/ChatWidget';
+
 const COMPLETED_DAYS_KEY = 'hotel_english_completed_days';
 const XP_KEY = 'hotel_english_xp';
 const STREAK_KEY = 'hotel_english_streak';
@@ -4786,7 +4788,7 @@ export default function App() {
         </div>
       </div>
 
-
+      <ChatWidget user={user} supabase={supabase} />
 
     </div>
   );
