@@ -1477,25 +1477,31 @@ export default function App() {
                 didUpdateStreak = true;
              } else if (diffDays > 1) {
                 // Missed days
-                const missedDays = diffDays - 1;
-                const cost = missedDays * 50;
-                if (currentXp >= cost) {
-                   // Streak freeze
-                   currentXp -= cost;
-                   currentStreak += 1;
+                if (currentStreak === 0) {
+                   // Streak đã = 0, không cần trừ XP hay thông báo gì
                    lastDateStr = todayStr;
                    didUpdateStreak = true;
-                   setStreakMessage({ type: 'saved', missedDays, cost });
-                   sendLocalNotification('Chuỗi học tập đã được cứu! 🛡️', {
-                     body: `Hệ thống đã dùng XP để bảo vệ Streak của bạn sau khi bạn bỏ lỡ ${missedDays} ngày.`,
-                     tag: 'streak-saved'
-                   });
                 } else {
-                   // Streak lost
-                   currentStreak = 0;
-                   lastDateStr = todayStr;
-                   didUpdateStreak = true;
-                   setStreakMessage({ type: 'lost', missedDays, cost });
+                   const missedDays = diffDays - 1;
+                   const cost = missedDays * 50;
+                   if (currentXp >= cost) {
+                      // Streak freeze
+                      currentXp -= cost;
+                      currentStreak += 1;
+                      lastDateStr = todayStr;
+                      didUpdateStreak = true;
+                      setStreakMessage({ type: 'saved', missedDays, cost });
+                      sendLocalNotification('Chuỗi học tập đã được cứu! 🛡️', {
+                        body: `Hệ thống đã dùng XP để bảo vệ Streak của bạn sau khi bạn bỏ lỡ ${missedDays} ngày.`,
+                        tag: 'streak-saved'
+                      });
+                   } else {
+                      // Streak lost
+                      currentStreak = 0;
+                      lastDateStr = todayStr;
+                      didUpdateStreak = true;
+                      setStreakMessage({ type: 'lost', missedDays, cost });
+                   }
                 }
              }
           }
