@@ -28,6 +28,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
   const [isLoadingRecent, setIsLoadingRecent] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   // Load recent chats
   useEffect(() => {
@@ -248,6 +249,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
 
     const msgContent = newMessage.trim();
     setNewMessage(''); // optimistic clear
+    chatInputRef.current?.blur(); // close keyboard
     
     // Optimistic append
     const tempMsg = {
@@ -657,6 +659,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                       <Bookmark className="w-5 h-5" />
                     </button>
                     <input 
+                      ref={chatInputRef}
                       type="text" 
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
