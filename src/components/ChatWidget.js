@@ -34,7 +34,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
     if (!isOpen || viewState !== 'list' || !supabase || !user || searchQuery.trim() !== '') return;
     
     const loadRecentChats = async () => {
-      setIsLoadingRecent(true);
+      if (recentChats.length === 0) setIsLoadingRecent(true);
       const { data: recentMsgs, error } = await supabase
         .from('messages')
         .select('sender_id, receiver_id, content, created_at')
@@ -152,7 +152,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
   useEffect(() => {
     if (viewState === 'room' && activeChatUser && supabase && user) {
       const loadMessages = async () => {
-        setIsLoadingMessages(true);
+        if (messages.length === 0) setIsLoadingMessages(true);
         const { data, error } = await supabase
           .from('messages')
           .select('*')
@@ -245,6 +245,9 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
   };
 
   const openChatWithUser = (chatUser) => {
+    if (activeChatUser?.id !== chatUser.id) {
+      setMessages([]);
+    }
     setActiveChatUser(chatUser);
     setViewState('room');
     setSearchQuery('');
