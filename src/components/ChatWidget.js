@@ -79,21 +79,35 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
     loadRecentChats();
   }, [isOpen, viewState, user, supabase, searchQuery]);
 
+  const viewStateRef = useRef(viewState);
+  useEffect(() => { viewStateRef.current = viewState; }, [viewState]);
+
+  const activeChatUserRef = useRef(activeChatUser);
+  useEffect(() => { activeChatUserRef.current = activeChatUser; }, [activeChatUser]);
+
+  const recentChatsRef = useRef(recentChats);
+  useEffect(() => { recentChatsRef.current = recentChats; }, [recentChats]);
+
   // Subscribe to incoming messages
   useEffect(() => {
     if (!user || !supabase) return;
 
+    const channelName = `messages-${user.id}`;
     const channel = supabase
-      .channel('public:messages')
+      .channel(channelName)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
         table: 'messages',
         filter: `receiver_id=eq.${user.id}`
-      }, (payload) => {
+      }, async (payload) => {
         const newMsg = payload.new;
+        const currentViewState = viewStateRef.current;
+        const currentActiveChatUser = activeChatUserRef.current;
+        const currentRecentChats = recentChatsRef.current;
+
         // If we are currently chatting with the sender, append message and mark as read
-        if (viewState === 'room' && activeChatUser && newMsg.sender_id === activeChatUser.id) {
+        if (currentViewState === 'room' && currentActiveChatUser && newMsg.sender_id === currentActiveChatUser.id) {
           supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id).then();
           newMsg.is_read = true;
           
@@ -103,13 +117,32 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
           // Otherwise, increment unread count
           setUnreadCount(prev => prev + 1);
         }
+
+        // Update recent chats list
+        const existingUserIndex = currentRecentChats.findIndex(u => u.id === newMsg.sender_id);
+        if (existingUserIndex >= 0) {
+          setRecentChats(prev => {
+            const newList = [...prev];
+            const updatedUser = { ...newList[existingUserIndex], content: newMsg.content, created_at: newMsg.created_at };
+            newList.splice(existingUserIndex, 1);
+            newList.unshift(updatedUser);
+            return newList;
+          });
+        } else {
+          const { data } = await supabase.from('chat_users_view').select('*').eq('id', newMsg.sender_id).single();
+          if (data) {
+            data.content = newMsg.content;
+            data.created_at = newMsg.created_at;
+            setRecentChats(prev => [data, ...prev]);
+          }
+        }
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, supabase, viewState, activeChatUser]);
+  }, [user, supabase]);
 
   // Scroll to bottom when messages change
   const scrollToBottom = () => {
