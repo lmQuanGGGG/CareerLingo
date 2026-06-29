@@ -30,6 +30,30 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
   const messagesEndRef = useRef(null);
   const chatInputRef = useRef(null);
 
+  // Check URL params for chat_with
+  useEffect(() => {
+    if (typeof window !== 'undefined' && supabase && user) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const chatWithId = urlParams.get('chat_with');
+      
+      if (chatWithId) {
+        // Open chat with this user
+        supabase.from('chat_users_view').select('*').eq('id', chatWithId).single().then(({ data }) => {
+          if (data) {
+            setIsOpen(true);
+            setActiveChatUser(data);
+            setViewState('room');
+            
+            // Clean up URL
+            const url = new URL(window.location);
+            url.searchParams.delete('chat_with');
+            window.history.replaceState({}, '', url);
+          }
+        });
+      }
+    }
+  }, [supabase, user]);
+
   // Load recent chats
   useEffect(() => {
     if (!isOpen || viewState !== 'list' || !supabase || !user || searchQuery.trim() !== '') return;
@@ -38,7 +62,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
       if (recentChats.length === 0) setIsLoadingRecent(true);
       const { data: recentMsgs, error } = await supabase
         .from('messages')
-        .select('sender_id, receiver_id, content, created_at')
+        .select('sender_id, receiver_id, content, created_at, is_read')
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false })
         .limit(100);
@@ -67,6 +91,8 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
              usersData.forEach(u => {
                u.content = latestMsgsMap[u.id].content;
                u.created_at = latestMsgsMap[u.id].created_at;
+               u.is_read = latestMsgsMap[u.id].is_read;
+               u.is_sender = latestMsgsMap[u.id].sender_id === user.id;
              });
              usersData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
              setRecentChats(usersData);
@@ -90,7 +116,13 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
       if (existingUserIndex >= 0) {
         found = true;
         const newList = [...prev];
-        const updatedUser = { ...newList[existingUserIndex], content: msg.content, created_at: msg.created_at };
+        const updatedUser = { 
+          ...newList[existingUserIndex], 
+          content: msg.content, 
+          created_at: msg.created_at,
+          is_read: msg.is_read,
+          is_sender: msg.sender_id === user.id
+        };
         newList.splice(existingUserIndex, 1);
         newList.unshift(updatedUser);
         return newList;
@@ -103,6 +135,8 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
       if (data) {
         data.content = msg.content;
         data.created_at = msg.created_at;
+        data.is_read = msg.is_read;
+        data.is_sender = msg.sender_id === user.id;
         setRecentChats(prev => [data, ...prev]);
       }
     }
@@ -152,7 +186,13 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
         if (existingUserIndex >= 0) {
           setRecentChats(prev => {
             const newList = [...prev];
-            const updatedUser = { ...newList[existingUserIndex], content: newMsg.content, created_at: newMsg.created_at };
+            const updatedUser = { 
+              ...newList[existingUserIndex], 
+              content: newMsg.content, 
+              created_at: newMsg.created_at,
+              is_read: newMsg.is_read,
+              is_sender: newMsg.sender_id === user.id
+            };
             newList.splice(existingUserIndex, 1);
             newList.unshift(updatedUser);
             return newList;
@@ -162,6 +202,8 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
           if (data) {
             data.content = newMsg.content;
             data.created_at = newMsg.created_at;
+            data.is_read = newMsg.is_read;
+            data.is_sender = newMsg.sender_id === user.id;
             setRecentChats(prev => [data, ...prev]);
           }
         }
@@ -521,17 +563,17 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                         )}
                         <div className="flex-1 truncate">
                           <div className="flex justify-between items-baseline mb-0.5">
-                            <h4 className={`text-sm truncate capitalize ${u.latestMessage && u.latestMessage.sender_id !== user.id && !u.latestMessage.is_read ? 'font-extrabold text-[#1D1D1F]' : 'font-semibold text-gray-900'}`}>{u.display_name}</h4>
-                            {u.latestMessage && (
+                            <h4 className={`text-sm truncate capitalize ${!u.is_sender && u.is_read === false ? 'font-extrabold text-[#1D1D1F]' : 'font-semibold text-gray-900'}`}>{u.display_name}</h4>
+                            {u.created_at && (
                               <span className="text-[10px] text-gray-400 shrink-0 ml-2">
-                                {new Date(u.latestMessage.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}
+                                {new Date(u.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}
                               </span>
                             )}
                           </div>
-                          {u.latestMessage ? (
-                            <p className={`text-xs truncate ${u.latestMessage.sender_id !== user.id && !u.latestMessage.is_read ? 'font-bold text-black' : 'text-gray-500'}`}>
-                              {u.latestMessage.sender_id === user.id ? 'Bạn: ' : ''}
-                              {u.latestMessage.content.startsWith('[VOCAB_CARD]') ? 'Đã chia sẻ một từ vựng' : u.latestMessage.content}
+                          {u.content ? (
+                            <p className={`text-xs truncate ${!u.is_sender && u.is_read === false ? 'font-bold text-black' : 'text-gray-500'}`}>
+                              {u.is_sender ? 'Bạn: ' : ''}
+                              {u.content.startsWith('[VOCAB_CARD]') ? 'Đã chia sẻ một từ vựng' : u.content}
                             </p>
                           ) : (
                             <p className="text-xs text-gray-500 truncate">Nhấn để nhắn tin</p>
