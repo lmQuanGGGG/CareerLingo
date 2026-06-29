@@ -275,6 +275,38 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
     setSearchQuery('');
   };
 
+  const processedUrlParam = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || processedUrlParam.current || !supabase || !user) return;
+    
+    const searchParams = new URLSearchParams(window.location.search);
+    const chatWithId = searchParams.get('chat_with');
+    
+    if (chatWithId) {
+      processedUrlParam.current = true;
+      
+      const openChatFromUrl = async () => {
+        const { data } = await supabase
+          .from('chat_users_view')
+          .select('*')
+          .eq('id', chatWithId)
+          .single();
+          
+        if (data) {
+          setIsOpen(true);
+          openChatWithUser(data);
+          
+          const url = new URL(window.location.href);
+          url.searchParams.delete('chat_with');
+          window.history.replaceState({}, '', url);
+        }
+      };
+      
+      openChatFromUrl();
+    }
+  }, [supabase, user, isOpen]);
+
   const renderMessageContent = (msg, isMe) => {
     if (msg.content.startsWith('[VOCAB_CARD]')) {
       try {
