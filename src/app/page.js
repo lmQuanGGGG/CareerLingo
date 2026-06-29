@@ -2662,6 +2662,7 @@ export default function App() {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
+                          e.target.blur();
                           lookupDictionary(e);
                         }
                       }}
@@ -2723,10 +2724,10 @@ export default function App() {
                           <div className="flex items-center gap-2 shrink-0">
                             <button
                               onClick={() => toggleFavorite(dictResult)}
-                              className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-colors ${isFavorite(dictResult.word) ? 'bg-[#FF9500]/10 text-[#FF9500]' : 'bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                              className="bg-[#F5F5F7] hover:bg-gray-200 p-2 sm:p-3 rounded-xl sm:rounded-2xl text-[#1D1D1F] transition-colors"
                               title="Lưu từ vựng"
                             >
-                              {isFavorite(dictResult.word) ? <BookmarkCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />}
+                              {isFavorite(dictResult.word) ? <BookmarkCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#0071E3]" /> : <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />}
                             </button>
                             <button
                               onClick={handleCopyDict}
@@ -3938,13 +3939,20 @@ export default function App() {
                   ? favorites.slice().reverse().map(item => {
                       const wordKey = typeof item === 'string' ? item : item.word;
                       const existing = CURRENT_VOCAB.find(v => v.word.toLowerCase() === wordKey.toLowerCase());
-                      return existing || (typeof item === 'object' ? item : { word: wordKey, mean: 'Từ vựng tra cứu thêm', ipa: '', category: 'Saved Custom', eg: '' });
+                      return existing || (typeof item === 'object' ? {
+                        word: item.word,
+                        ipa: item.ipa || '',
+                        mean: item.meaning || item.mean || 'Từ vựng tra cứu thêm',
+                        eg: item.examples?.[0] || item.eg || '',
+                        eg_vn: item.examples?.[1] || item.eg_vn || '',
+                        category: 'Saved Custom'
+                      } : { word: wordKey, mean: 'Từ vựng tra cứu thêm', ipa: '', category: 'Saved Custom', eg: '' });
                     })
                   : CURRENT_VOCAB
                 )
-                  .filter(v => v.word.toLowerCase().includes(vocabSearch.toLowerCase()) || (v.mean && v.mean.toLowerCase().includes(vocabSearch.toLowerCase())))
+                  .filter(v => v && v.word && (v.word.toLowerCase().includes(vocabSearch.toLowerCase()) || (v.mean && v.mean.toLowerCase().includes(vocabSearch.toLowerCase()))))
                   .map((v, idx) => (
-                    <div key={idx} className="bg-[#FFFFFF]/90 border border-gray-100 p-6 rounded-2xl flex justify-between items-start hover:shadow-lg transition-all duration-300 group">
+                    <div key={`${v.word}-${idx}`} className="bg-[#FFFFFF]/90 border border-gray-100 p-6 rounded-2xl flex justify-between items-start hover:shadow-lg transition-all duration-300 group">
                       <div className="space-y-2 flex-1">
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-xl text-[#1D1D1F]">{v.word}</span>
