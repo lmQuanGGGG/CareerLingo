@@ -1627,6 +1627,13 @@ export default function App() {
     await supabase.from('user_progress').update(updateData).eq('id', user.id);
   };
 
+  const handleNameChange = (newName) => {
+    setDisplayName(newName);
+    setIsEditingName(false);
+    syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newName);
+    setLeaderboardUsers(prev => prev.map(u => u.id === user?.id ? { ...u, display_name: newName } : u));
+  };
+
   useEffect(() => {
     setQuizAnswers({});
     setScrambledFeedback(null);
@@ -2445,20 +2452,14 @@ export default function App() {
                           autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
-                              setDisplayName(tempName);
-                              setIsEditingName(false);
-                              syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
+                              handleNameChange(tempName);
                             } else if (e.key === 'Escape') {
                               setIsEditingName(false);
                             }
                           }}
                         />
                         <button
-                          onClick={() => {
-                            setDisplayName(tempName);
-                            setIsEditingName(false);
-                            syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
-                          }}
+                          onClick={() => handleNameChange(tempName)}
                           className="text-blue-600 hover:text-blue-700 p-1 bg-blue-50 rounded"
                         >
                           <Check className="w-3 h-3" />
@@ -4525,9 +4526,7 @@ export default function App() {
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        setDisplayName(tempName);
-                        setIsEditingName(false);
-                        syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
+                        handleNameChange(tempName);
                       } else if (e.key === 'Escape') {
                         setIsEditingName(false);
                       }
@@ -4535,11 +4534,7 @@ export default function App() {
                   />
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        setDisplayName(tempName);
-                        setIsEditingName(false);
-                        syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
-                      }}
+                      onClick={() => handleNameChange(tempName)}
                       className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm"
                     >
                       Lưu tên
