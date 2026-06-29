@@ -10,10 +10,14 @@ create table public.user_progress (
   favorites jsonb default '[]'::jsonb,
   ai_scenarios jsonb default '[]'::jsonb,
   ai_lessons jsonb default '{}'::jsonb,
+  push_subscriptions jsonb default '[]'::jsonb,
   display_name text,
   avatar_url text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- NẾU BẢNG ĐÃ TỒN TẠI, CHẠY DÒNG NÀY ĐỂ THÊM CỘT:
+-- alter table public.user_progress add column push_subscriptions jsonb default '[]'::jsonb;
 
 -- Bật Row Level Security (RLS) để bảo mật dữ liệu
 alter table public.user_progress enable row level security;
