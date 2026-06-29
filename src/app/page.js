@@ -2551,7 +2551,7 @@ export default function App() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 w-full group">
-                        <p className="text-sm font-bold text-[#1D1D1F] truncate capitalize">{displayName || user?.email?.split('@')[0].replace(/\./g, ' ')}</p>
+                        <p className="text-sm font-bold text-[#1D1D1F] truncate">{displayName || user?.email?.split('@')[0].replace(/\./g, ' ')}</p>
                         <button
                           onClick={() => {
                             setTempName(displayName || user?.email?.split('@')[0].replace(/\./g, ' ') || '');
@@ -4578,11 +4578,7 @@ export default function App() {
                       setAvatarUrl(url);
                       await syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, url);
                       setShowAvatarModal(false);
-                      if (activeTab === 'leaderboard') {
-                        // Tricky way to re-fetch leaderboard, just simple re-fetch
-                        setActiveTab('dashboard'); 
-                        setTimeout(() => setActiveTab('leaderboard'), 100);
-                      }
+                      setLeaderboardUsers(prev => prev.map(u => u.id === user?.id ? { ...u, avatar_url: url } : u));
                     }}
                     className={`aspect-square rounded-2xl border-2 overflow-hidden bg-[#F5F5F7] transition-all hover:scale-105 ${avatarUrl === url ? 'border-[#0071E3] shadow-md' : 'border-transparent hover:border-gray-300'}`}
                   >
@@ -4653,7 +4649,7 @@ export default function App() {
                   setTempName(displayName || user?.email?.split('@')[0].replace(/\./g, ' ') || '');
                   setIsEditingName(true);
                 }}>
-                  <h2 className="text-xl sm:text-2xl font-bold text-[#1D1D1F] tracking-tight truncate max-w-[200px] sm:max-w-[300px] capitalize">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#1D1D1F] tracking-tight truncate max-w-[200px] sm:max-w-[300px]">
                     {displayName || user?.email?.split('@')[0].replace(/\./g, ' ') || "Chưa đăng nhập"}
                   </h2>
                   <Edit3 className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
