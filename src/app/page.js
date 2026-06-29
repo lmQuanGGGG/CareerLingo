@@ -2367,7 +2367,20 @@ export default function App() {
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow-xl shadow-gray-200/50 sm:rounded-2xl sm:px-10 border border-gray-100">
-            <div className="space-y-6">
+            <form className="space-y-6" onSubmit={async (e) => {
+              e.preventDefault();
+              setAuthLoading(true);
+              setAuthError('');
+              if (authMode === 'login') {
+                const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
+                if (error) setAuthError(error.message);
+              } else {
+                const { error } = await supabase.auth.signUp({ email: authEmail, password: authPassword });
+                if (error) setAuthError(error.message);
+                else setAuthError("Đăng ký thành công! Hãy kiểm tra email để xác thực.");
+              }
+              setAuthLoading(false);
+            }}>
               {authError && (
                 <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100 flex items-start gap-2">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -2382,6 +2395,12 @@ export default function App() {
                     required
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('auth-password')?.focus();
+                      }
+                    }}
                     className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 bg-white text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
                 </div>
@@ -2391,6 +2410,7 @@ export default function App() {
                 <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
                 <div className="mt-1">
                   <input
+                    id="auth-password"
                     type="password"
                     required
                     value={authPassword}
@@ -2402,26 +2422,14 @@ export default function App() {
 
               <div>
                 <button
-                  onClick={async () => {
-                    setAuthLoading(true);
-                    setAuthError('');
-                    if (authMode === 'login') {
-                      const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
-                      if (error) setAuthError(error.message);
-                    } else {
-                      const { error } = await supabase.auth.signUp({ email: authEmail, password: authPassword });
-                      if (error) setAuthError(error.message);
-                      else setAuthError("Đăng ký thành công! Hãy kiểm tra email để xác thực.");
-                    }
-                    setAuthLoading(false);
-                  }}
+                  type="submit"
                   disabled={authLoading}
                   className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:bg-blue-300"
                 >
                   {authLoading ? 'Đang xử lý...' : (authMode === 'login' ? 'Đăng nhập' : 'Đăng ký')}
                 </button>
               </div>
-            </div>
+            </form>
 
             <div className="mt-6">
               <div className="mt-6 text-center">
