@@ -11,7 +11,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "No input provided" }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" });
 
     const prompt = `
 Bạn là một chuyên gia đào tạo Lễ tân Khách sạn 5 sao quốc tế (chuẩn JW Marriott, Park Hyatt).
@@ -34,7 +34,7 @@ Trả về kết quả TẤT CẢ DƯỚI DẠNG JSON với cấu trúc chính x
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let text = response.text().trim();
-    
+
     // Clean up markdown JSON blocks if Gemini returns them
     text = text.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
 

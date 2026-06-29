@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '../utils/supabase/client';
+import { IT_LESSONS_DATA, IT_RAW_VOCAB_30_DAYS, IT_IPA_DICT } from './itData';
 import { 
   Award, BookOpen, Calendar, CheckCircle2, ChevronRight, Compass, 
   Flame, Globe, HelpCircle, History, Info, Key, Languages, Layers, Repeat,
   MapPin, MessageCircle, MessageSquare, Mic, MicOff, Music, Play, Pause, Square, RotateCcw, 
   Search, ShieldAlert, Star, Trophy, Volume2, VolumeX, User, 
-  Sparkles, Check, X, AlertCircle, Bookmark, BookmarkCheck, ChevronLeft, LogOut, ChevronDown, Smile, Lock, MoreHorizontal, Bell, BellOff
+  Sparkles, Check, Copy, X, AlertCircle, Bookmark, BookmarkCheck, ChevronLeft, LogOut, ChevronDown, Smile, Lock, MoreHorizontal, Bell, BellOff, Edit3, ArrowRightLeft
 } from 'lucide-react';
 
 const COMPLETED_DAYS_KEY = 'hotel_english_completed_days';
@@ -670,7 +671,7 @@ const IPA_DICT = {
   "Hospitality master": "/ˌhɑspəˈtæləti ˈmæstər/"
 };
 
-const { LESSONS_DATA, VOCABULARY_BANK } = (() => {
+const HOSPITALITY_DATA = (() => {
   const vBank = [];
   const lData = {};
 
@@ -679,16 +680,69 @@ const { LESSONS_DATA, VOCABULARY_BANK } = (() => {
     const dayPairs = dayString.split(',');
     
     const egTemplates = [
-      "The guest was very impressed with our {word}.",
-      "Please ensure the {word} process strictly follows our 5-star standard.",
-      "Could you please assist the VIP guest with the {word}?",
-      "Our hotel is renowned for its exceptional {word}.",
-      "Make sure to handle the {word} with the utmost care.",
-      "The manager requested a detailed report on the {word}.",
-      "Excellent {word} can significantly boost our guest satisfaction scores.",
-      "We always strive to maintain high quality in our {word}.",
-      "Please review the {word} procedure for today's arriving guests.",
-      "A proactive approach to {word} is expected from all staff members."
+      "The VIP guest was thoroughly impressed with the standard of our {word} during their stay.",
+      "As part of our 5-star commitment, every team member must execute the {word} procedure flawlessly.",
+      "Could you please assist the incoming delegation with their {word} requirements?",
+      "Our resort has earned prestigious awards specifically for our exceptional {word}.",
+      "It is imperative that we handle the {word} with the utmost discretion and professionalism.",
+      "The general manager requested a comprehensive review of yesterday's {word} logs.",
+      "Delivering an outstanding {word} experience significantly elevates our guest satisfaction scores.",
+      "We consistently strive to exceed expectations when it comes to {word}.",
+      "Please cross-verify the {word} protocols for the high-profile arrivals this afternoon.",
+      "A proactive and empathetic approach to {word} is expected from our front office staff.",
+      "The concierge team successfully managed a complex request regarding the {word}.",
+      "Ensuring seamless {word} is crucial for maintaining our brand's luxury reputation.",
+      "Please coordinate with the housekeeping department to finalize the {word}.",
+      "The guest's feedback highlighted our staff's remarkable efficiency in handling the {word}.",
+      "We must anticipate the guest's needs before they even ask about the {word}.",
+      "Properly executing the {word} demonstrates our dedication to personalized service.",
+      "The shift supervisor will conduct a brief training session on proper {word} etiquette.",
+      "Our commitment to excellence is reflected in every aspect of our {word}.",
+      "Please ensure that the complimentary amenities are aligned with the {word} standards.",
+      "Handling a guest complaint regarding the {word} requires patience, active listening, and a swift resolution.",
+      "The executive lounge offers exclusive benefits, including expedited {word} for our premium members.",
+      "A warm smile and a polite greeting are the foundation of effective {word}.",
+      "Please update the property management system after completing the {word}.",
+      "The culinary team has curated a special menu to enhance the overall {word} experience.",
+      "We must ensure that all safety regulations are strictly followed during the {word}.",
+      "The guest relations manager personally followed up to ensure the {word} was resolved to their satisfaction.",
+      "Our loyalty program rewards frequent guests with priority access to {word}.",
+      "A seamless and efficient {word} process leaves a lasting positive impression on our guests.",
+      "Please be mindful of cultural nuances when assisting international guests with {word}.",
+      "Continuous improvement in our {word} is vital to staying ahead in the luxury hospitality market."
+    ];
+    
+    const egVnTemplates = [
+      "Vị khách VIP đã thực sự ấn tượng với tiêu chuẩn {mean} của chúng ta trong suốt kỳ nghỉ.",
+      "Như một phần của cam kết 5 sao, mỗi thành viên trong đội ngũ phải thực hiện quy trình {mean} một cách hoàn hảo.",
+      "Bạn có thể vui lòng hỗ trợ phái đoàn sắp đến với các yêu cầu về {mean} của họ không?",
+      "Khu nghỉ dưỡng của chúng ta đã giành được các giải thưởng danh giá nhờ vào {mean} xuất sắc.",
+      "Điều bắt buộc là chúng ta phải xử lý {mean} với sự cẩn trọng và chuyên nghiệp tối đa.",
+      "Tổng giám đốc đã yêu cầu xem xét toàn diện các nhật ký {mean} ngày hôm qua.",
+      "Việc mang đến trải nghiệm {mean} xuất sắc làm tăng đáng kể điểm số hài lòng của khách hàng.",
+      "Chúng tôi không ngừng nỗ lực vượt qua sự mong đợi khi nói đến {mean}.",
+      "Vui lòng xác minh chéo các giao thức {mean} cho những vị khách quan trọng đến vào chiều nay.",
+      "Một cách tiếp cận chủ động và thấu cảm đối với {mean} được mong đợi từ nhân viên tiền sảnh.",
+      "Đội ngũ hỗ trợ khách hàng (concierge) đã quản lý thành công một yêu cầu phức tạp liên quan đến {mean}.",
+      "Đảm bảo {mean} liền mạch là yếu tố then chốt để duy trì danh tiếng sang trọng của thương hiệu chúng ta.",
+      "Vui lòng phối hợp với bộ phận buồng phòng để hoàn tất {mean}.",
+      "Phản hồi của khách hàng đã nhấn mạnh hiệu quả đáng chú ý của nhân viên chúng ta trong việc xử lý {mean}.",
+      "Chúng ta phải dự đoán nhu cầu của khách hàng trước cả khi họ hỏi về {mean}.",
+      "Thực hiện đúng {mean} thể hiện sự cống hiến của chúng ta cho dịch vụ cá nhân hóa.",
+      "Trưởng ca sẽ tiến hành một buổi đào tạo ngắn gọn về nghi thức {mean} đúng chuẩn.",
+      "Cam kết về sự xuất sắc của chúng tôi được phản ánh trong mọi khía cạnh của {mean}.",
+      "Vui lòng đảm bảo rằng các tiện ích miễn phí phù hợp với tiêu chuẩn {mean}.",
+      "Xử lý khiếu nại của khách hàng liên quan đến {mean} đòi hỏi sự kiên nhẫn, lắng nghe tích cực và giải pháp nhanh chóng.",
+      "Khu vực sảnh thương gia cung cấp các đặc quyền độc quyền, bao gồm cả {mean} nhanh chóng cho các hội viên cao cấp.",
+      "Một nụ cười ấm áp và một lời chào lịch sự là nền tảng của {mean} hiệu quả.",
+      "Vui lòng cập nhật hệ thống quản lý khách sạn sau khi hoàn tất {mean}.",
+      "Đội ngũ ẩm thực đã tuyển chọn một thực đơn đặc biệt để nâng cao trải nghiệm {mean} tổng thể.",
+      "Chúng ta phải đảm bảo rằng tất cả các quy định an toàn được tuân thủ nghiêm ngặt trong quá trình {mean}.",
+      "Giám đốc quan hệ khách hàng đã đích thân theo dõi để đảm bảo {mean} được giải quyết một cách thỏa đáng.",
+      "Chương trình khách hàng thân thiết của chúng tôi trao thưởng cho những khách hàng thường xuyên với quyền ưu tiên truy cập vào {mean}.",
+      "Một quy trình {mean} liền mạch và hiệu quả để lại ấn tượng tích cực lâu dài cho khách hàng của chúng ta.",
+      "Vui lòng lưu tâm đến các sắc thái văn hóa khi hỗ trợ khách quốc tế về {mean}.",
+      "Cải tiến liên tục trong {mean} của chúng ta là điều tối quan trọng để dẫn đầu trong thị trường khách sạn cao cấp."
     ];
     
     const vocab = dayPairs.map((pair, index) => {
@@ -698,11 +752,15 @@ const { LESSONS_DATA, VOCABULARY_BANK } = (() => {
       const template = egTemplates[index % egTemplates.length];
       const eg = template.replace("{word}", en.toLowerCase());
       
+      const templateVn = egVnTemplates[index % egVnTemplates.length];
+      const eg_vn = templateVn.replace("{mean}", vn.toLowerCase());
+      
       const wordObj = {
         word: en,
         ipa: ipa,
         mean: vn,
         eg: eg,
+        eg_vn: eg_vn,
         category: `Day ${day}`
       };
       vBank.push(wordObj);
@@ -752,11 +810,7 @@ const { LESSONS_DATA, VOCABULARY_BANK } = (() => {
 
     const quiz = [];
     for (let i = 0; i < 10; i++) {
-      // Create 10 deterministic questions out of the 20 words for this day to prevent hydration mismatches
       const v = vocab[i * 2]; 
-      
-      const optionsEn = [v.word, vocab[(i * 2 + 1) % 20].word, vocab[(i * 2 + 3) % 20].word, vocab[(i * 2 + 5) % 20].word].sort((a, b) => a.localeCompare(b));
-      const optionsVn = [v.mean, vocab[(i * 2 + 1) % 20].mean, vocab[(i * 2 + 3) % 20].mean, vocab[(i * 2 + 5) % 20].mean].sort((a, b) => a.localeCompare(b));
       quiz.push({ q: `Từ vựng tiếng Anh cho nghĩa "${v.mean}" là gì?`, a: v.word });
     }
 
@@ -765,6 +819,158 @@ const { LESSONS_DATA, VOCABULARY_BANK } = (() => {
 
   return { LESSONS_DATA: lData, VOCABULARY_BANK: vBank };
 })();
+
+
+const IT_DATA = (() => {
+  const vBank = [];
+  const lData = {};
+
+  for (let day = 1; day <= 30; day++) {
+    const dayString = IT_RAW_VOCAB_30_DAYS[day - 1];
+    const dayPairs = dayString.split(',');
+    
+    const egTemplates = [
+      "The client was highly impressed with the robustness of our new {word} implementation.",
+      "Please ensure that the {word} process strictly adheres to our agile methodology and coding standards.",
+      "Could you please assist the backend team with debugging the {word} module?",
+      "Our engineering team is renowned for delivering exceptional {word} under tight deadlines.",
+      "It is critical that we handle the {word} migration with zero downtime and utmost precision.",
+      "The tech lead requested a comprehensive technical specification regarding the {word}.",
+      "Optimizing the {word} can significantly boost our application's overall performance and scalability.",
+      "We consistently strive to maintain high test coverage when deploying any {word}.",
+      "Please review the {word} pull request before the end of today's sprint.",
+      "A proactive approach to refactoring the {word} is expected from all senior developers.",
+      "The DevOps team successfully managed a complex deployment involving the {word}.",
+      "Ensuring seamless integration of the {word} is crucial for maintaining system stability.",
+      "Please coordinate with the QA department to finalize the test cases for the {word}.",
+      "The user feedback highlighted our application's remarkable efficiency in handling {word}.",
+      "We must anticipate potential edge cases before they affect the {word}.",
+      "Properly documenting the {word} demonstrates our dedication to a maintainable codebase.",
+      "The scrum master will conduct a brief knowledge-sharing session on the new {word} architecture.",
+      "Our commitment to clean code is reflected in every component of the {word}.",
+      "Please ensure that the cloud infrastructure is fully provisioned for the {word}.",
+      "Resolving a critical production bug related to the {word} requires systematic debugging and a swift hotfix.",
+      "The enterprise plan offers exclusive features, including prioritized support for {word}.",
+      "A clear technical vision and a solid architecture are the foundation of effective {word}.",
+      "Please update the Jira board after completing the code review for the {word}.",
+      "The frontend team has implemented a dynamic UI to enhance the overall {word} experience.",
+      "We must ensure that all security vulnerabilities are strictly mitigated during the {word} development.",
+      "The product manager personally followed up to ensure the {word} aligned with the business requirements.",
+      "Our continuous integration pipeline automates the testing and deployment of {word}.",
+      "A seamless and efficient {word} workflow minimizes technical debt and accelerates delivery.",
+      "Please be mindful of backward compatibility when updating the API for {word}.",
+      "Continuous optimization of our {word} is vital to staying competitive in the software market."
+    ];
+    
+    const egVnTemplates = [
+      "Khách hàng rất ấn tượng với độ mạnh mẽ của việc triển khai {mean} mới của chúng ta.",
+      "Vui lòng đảm bảo rằng quy trình {mean} tuân thủ nghiêm ngặt phương pháp agile và các tiêu chuẩn mã hóa của chúng ta.",
+      "Bạn có thể vui lòng hỗ trợ nhóm backend gỡ lỗi module {mean} không?",
+      "Nhóm kỹ sư của chúng tôi nổi tiếng với việc bàn giao {mean} xuất sắc dưới áp lực thời gian gấp rút.",
+      "Điều quan trọng là chúng ta phải xử lý quá trình di chuyển {mean} mà không gây ra thời gian chết và với độ chính xác tối đa.",
+      "Trưởng nhóm kỹ thuật đã yêu cầu một bản đặc tả kỹ thuật toàn diện liên quan đến {mean}.",
+      "Việc tối ưu hóa {mean} có thể thúc đẩy đáng kể hiệu suất tổng thể và khả năng mở rộng của ứng dụng chúng ta.",
+      "Chúng tôi luôn cố gắng duy trì độ bao phủ kiểm thử cao khi triển khai bất kỳ {mean} nào.",
+      "Vui lòng xem xét yêu cầu kéo (pull request) của {mean} trước khi kết thúc sprint hôm nay.",
+      "Một cách tiếp cận chủ động để tái cấu trúc (refactor) {mean} được mong đợi từ tất cả các lập trình viên cấp cao.",
+      "Nhóm DevOps đã quản lý thành công một đợt triển khai phức tạp liên quan đến {mean}.",
+      "Đảm bảo sự tích hợp liền mạch của {mean} là yếu tố then chốt để duy trì sự ổn định của hệ thống.",
+      "Vui lòng phối hợp với bộ phận QA để hoàn tất các kịch bản kiểm thử (test cases) cho {mean}.",
+      "Phản hồi của người dùng đã nhấn mạnh hiệu quả đáng chú ý của ứng dụng chúng ta trong việc xử lý {mean}.",
+      "Chúng ta phải dự đoán các trường hợp ngoại lệ (edge cases) tiềm ẩn trước khi chúng ảnh hưởng đến {mean}.",
+      "Ghi chép tài liệu (documenting) {mean} đúng cách thể hiện sự cống hiến của chúng ta cho một cơ sở mã dễ bảo trì.",
+      "Scrum master sẽ tiến hành một buổi chia sẻ kiến thức ngắn gọn về kiến trúc {mean} mới.",
+      "Cam kết của chúng tôi đối với clean code (mã sạch) được phản ánh trong mọi thành phần của {mean}.",
+      "Vui lòng đảm bảo rằng cơ sở hạ tầng đám mây được cấp phát đầy đủ cho {mean}.",
+      "Việc giải quyết một lỗi sản xuất nghiêm trọng liên quan đến {mean} đòi hỏi việc gỡ lỗi có hệ thống và một bản vá nóng (hotfix) nhanh chóng.",
+      "Gói doanh nghiệp cung cấp các tính năng độc quyền, bao gồm hỗ trợ ưu tiên cho {mean}.",
+      "Một tầm nhìn kỹ thuật rõ ràng và một kiến trúc vững chắc là nền tảng của {mean} hiệu quả.",
+      "Vui lòng cập nhật bảng Jira sau khi hoàn tất đánh giá mã (code review) cho {mean}.",
+      "Nhóm frontend đã triển khai một giao diện người dùng (UI) động để nâng cao trải nghiệm {mean} tổng thể.",
+      "Chúng ta phải đảm bảo rằng tất cả các lỗ hổng bảo mật được giảm thiểu nghiêm ngặt trong quá trình phát triển {mean}.",
+      "Giám đốc sản phẩm đã đích thân theo dõi để đảm bảo {mean} phù hợp với các yêu cầu kinh doanh.",
+      "Đường ống tích hợp liên tục (CI pipeline) của chúng tôi tự động hóa việc kiểm thử và triển khai {mean}.",
+      "Một quy trình làm việc {mean} liền mạch và hiệu quả giúp giảm thiểu nợ kỹ thuật và đẩy nhanh tiến độ bàn giao.",
+      "Vui lòng lưu tâm đến khả năng tương thích ngược (backward compatibility) khi cập nhật API cho {mean}.",
+      "Tối ưu hóa liên tục {mean} của chúng ta là điều tối quan trọng để duy trì khả năng cạnh tranh trong thị trường phần mềm."
+    ];
+    
+    const vocab = dayPairs.map((pair, index) => {
+      const [en, vn] = pair.split(':');
+      const ipa = IT_IPA_DICT[en] || `/${en.toLowerCase().replace(/ /g, '.').replace(/-/g, '')}/`;
+      
+      const template = egTemplates[index % egTemplates.length];
+      const eg = template.replace("{word}", en.toLowerCase());
+      
+      const templateVn = egVnTemplates[index % egVnTemplates.length];
+      const eg_vn = templateVn.replace("{mean}", vn.toLowerCase());
+      
+      const wordObj = {
+        word: en,
+        ipa: ipa,
+        mean: vn,
+        eg: eg,
+        eg_vn: eg_vn,
+        category: `Day ${day}`
+      };
+      vBank.push(wordObj);
+      return wordObj;
+    });
+
+    const dialogue = [
+      { speaker: "Project Manager", text: `Good morning. Let's start our daily meeting. Can you update us on the ${vocab[0].word.toLowerCase()}?` },
+      { speaker: "Developer", text: `I have a specific question about the ${vocab[1].word.toLowerCase()}.` },
+      { speaker: "Project Manager", text: `Certainly. Let me carefully check the ${vocab[2].word.toLowerCase()} for you right now.` },
+      { speaker: "Developer", text: `Thank you. I truly appreciate your ${vocab[3].word.toLowerCase()} and professionalism.` },
+      { speaker: "Project Manager", text: `It is my absolute pleasure. Everything regarding the ${vocab[4].word.toLowerCase()} is perfectly confirmed.` }
+    ];
+
+    const listening = {
+      question: `Which specific item does the developer ask about in the conversation?`,
+      options: [vocab[1].word, vocab[5].word, vocab[6].word, vocab[7].word],
+      answer: vocab[1].word,
+      blankSentence: `I have a specific question about the [blank].`,
+      blankAnswer: vocab[1].word,
+      scrambled: ["I", "have", "a", "specific", "question", "about", "the", vocab[1].word + "."],
+      scrambledAnswer: `I have a specific question about the ${vocab[1].word}.`
+    };
+
+    const speaking = [
+      {
+        prompt: `Can you update us on the ${vocab[0].word.toLowerCase()}?`,
+        translation: `Bạn có thể cập nhật cho chúng tôi về ${vocab[0].mean.toLowerCase()} không?`
+      },
+      {
+        prompt: `Could you please provide more details about the ${vocab[1].word.toLowerCase()}?`,
+        translation: `Bạn có thể cung cấp thêm chi tiết về ${vocab[1].mean.toLowerCase()} được không?`
+      },
+      {
+        prompt: `I will ensure the ${vocab[2].word.toLowerCase()} is handled immediately.`,
+        translation: `Tôi sẽ đảm bảo ${vocab[2].mean.toLowerCase()} được xử lý ngay lập tức.`
+      },
+      {
+        prompt: `We apologize for any inconvenience caused by the ${vocab[3].word.toLowerCase()}.`,
+        translation: `Chúng tôi xin lỗi vì bất kỳ sự bất tiện nào gây ra bởi ${vocab[3].mean.toLowerCase()}.`
+      },
+      {
+        prompt: `Let me personally arrange the ${vocab[4].word.toLowerCase()} for you right away.`,
+        translation: `Hãy để tôi đích thân sắp xếp ${vocab[4].mean.toLowerCase()} cho bạn ngay bây giờ.`
+      }
+    ];
+
+    const quiz = [];
+    for (let i = 0; i < 10; i++) {
+      const v = vocab[i * 2]; 
+      quiz.push({ q: `Từ vựng tiếng Anh cho nghĩa "${v.mean}" là gì?`, a: v.word });
+    }
+
+    lData[day] = { vocab, dialogue, listening, speaking, quiz };
+  }
+
+  return { LESSONS_DATA: lData, VOCABULARY_BANK: vBank };
+})();
+
+
 
 const SITUATIONS = [
   { id: 1, title: "Khách VIP đến nhận phòng đột xuất", category: "VIP Service", desc: "Đón tiếp chu đáo chính trị gia hoặc người nổi tiếng không có lịch hẹn trước.", dialog: "R: Welcome to Grand Palace, Excellency. It is a profound honor. We will escort you to our Royal Lounge immediately.\nG: Thank you, I appreciate the promptness and confidentiality.", vocab: "Excellency (Kính thưa Ngài), Confidentiality (Sự bảo mật), Royal Lounge (Phòng chờ hoàng gia)" },
@@ -802,6 +1008,26 @@ for (let i = 21; i <= 50; i++) {
   });
 }
 
+const IT_SITUATIONS = [
+  { id: 1, title: "Khách hàng phàn nàn ứng dụng bị lỗi 500", category: "Incident Response", desc: "Người dùng báo cáo không thể đăng nhập vào hệ thống từ sáng nay.", dialog: "C: The application is returning a 500 Internal Server Error when I try to log in.\nD: I sincerely apologize for this disruption. Our on-call engineers have been paged and are investigating the root cause. We will provide an update within 15 minutes.", vocab: "Internal Server Error (Lỗi máy chủ nội bộ), Disruption (Sự gián đoạn), Root cause (Nguyên nhân gốc rễ)" },
+  { id: 2, title: "Yêu cầu thay đổi tiến độ dự án (Scope Creep)", category: "Project Management", desc: "Khách hàng muốn thêm tính năng thanh toán vào sprint hiện tại.", dialog: "C: We need to add the Stripe integration into this sprint's release.\nD: I understand the importance of this feature. However, adding it now will impact our current sprint goal. Shall we add it to the product backlog and prioritize it for the next sprint?", vocab: "Sprint goal (Mục tiêu chặng), Product backlog (Danh sách yêu cầu sản phẩm), Prioritize (Ưu tiên)" },
+  { id: 3, title: "Xung đột khi hợp nhất mã (Merge Conflict)", category: "Development", desc: "Hai lập trình viên sửa cùng một tệp gây ra xung đột khi pull request.", dialog: "D1: My PR has a merge conflict with your recent commit on the auth module.\nD2: Oh, I see. Let's jump on a quick call to resolve the conflict together so we don't overwrite each other's changes.", vocab: "Merge conflict (Xung đột hợp nhất mã), Pull request (Yêu cầu kéo mã), Overwrite (Ghi đè)" },
+  { id: 4, title: "Thảo luận về nợ kỹ thuật (Technical Debt)", category: "Architecture", desc: "Trưởng nhóm muốn dành thời gian sprint sau để dọn dẹp code cũ.", dialog: "TL: Our technical debt is slowing down feature development. We need to allocate 20% of the next sprint for refactoring.\nD: I completely agree. The legacy payment service is tightly coupled and needs decoupling immediately.", vocab: "Technical debt (Nợ kỹ thuật), Refactoring (Tái cấu trúc mã), Tightly coupled (Kết nối phụ thuộc nhiều)" }
+];
+
+for (let i = 5; i <= 50; i++) {
+  const categories = ["Incident Response", "Project Management", "Development", "Architecture", "QA/Testing", "Deployment"];
+  const selectedCat = categories[i % categories.length];
+  IT_SITUATIONS.push({
+    id: i,
+    title: `Tình huống IT ${i}: Xử lý vấn đề ${selectedCat}`,
+    category: selectedCat,
+    desc: `Tình huống thực tế nâng cao giúp rèn luyện khả năng giao tiếp và giải quyết vấn đề kỹ thuật liên quan đến ${selectedCat}.`,
+    dialog: "C: We need to discuss the recent system behavior.\nD: Sure, let's review the logs and metrics together.",
+    vocab: "Deployment (Triển khai), Logs (Nhật ký hệ thống), Metrics (Chỉ số đo lường)"
+  });
+}
+
 const ROLEPLAY_STARTERS = {
   'Khách VIP khó tính': [
     "Hello! I am checking in. I have a booking under the name of Richard Branson. I am extremely tired after a 12-hour flight. I expect exceptional service.",
@@ -820,6 +1046,36 @@ const ROLEPLAY_STARTERS = {
     "Hello. I'm here for the tech conference. Reservation under Michael. Could you also arrange a wake-up call for 5:30 AM tomorrow?",
     "Hi. Checking in for a business trip. Do you have a business center where I can print some documents later?",
     "Good evening. Corporate account under Sarah. I also need to book a taxi to the financial district for 8 AM tomorrow morning. Can you handle that?"
+  ],
+  'Khách đi gia đình': [
+    "Hi! We are checking in under the name Johnson. We have three kids with us, is there any chance we could get an adjoining room or extra beds?",
+    "Hello, I booked a family suite. Could you let me know what time the swimming pool and kids' club open tomorrow?",
+    "Excuse me, my toddler just spilled juice all over the carpet in our room. Could you send housekeeping immediately?"
+  ],
+  'Khách hàng khó tính': [
+    "Hi. I just tested the new feature you deployed, and it's completely broken. This is unacceptable, we have a launch tomorrow. I need this fixed immediately.",
+    "Hello. I've reviewed your recent PR. The code quality doesn't meet our standards and the performance is terrible. Can we discuss a complete rewrite?",
+    "Excuse me. We asked for the payment gateway integration last week. Why is it still pending? This delay is costing us money."
+  ],
+  'Quản lý dự án': [
+    "Good morning. We need to review the sprint progress. It looks like we are falling behind schedule on the backend API tasks. What's the blocker?",
+    "Hi team. I need an urgent update on the database migration. Are we going to meet the deadline for Friday's release?",
+    "Hello. The client just requested a major change to the UI layout. We need to adjust our sprint backlog immediately to accommodate this."
+  ],
+  'Đồng nghiệp tester': [
+    "Hey! I was testing your latest commit and I found several critical bugs on the login page. Can you take a look right now?",
+    "Hi there. The staging environment keeps crashing whenever I try to upload a file. Did you forget to include the new dependencies?",
+    "Hey, I'm getting a 500 Internal Server Error on the user dashboard. I've attached the logs. Let's pair program and debug this."
+  ],
+  'Tech Lead / CTO': [
+    "Hey, I was looking at the system architecture diagram you proposed. I have some concerns about the scalability of the database. Can you explain your reasoning?",
+    "Good afternoon. We need to migrate our legacy monolith to microservices by next quarter. How are you planning to handle the authentication?",
+    "Hi. I noticed a huge spike in AWS costs this week. Can you investigate which services are causing this and optimize them?"
+  ],
+  'Khách hàng non-tech': [
+    "Hello. I don't really understand this 'cloud' thing. Can you just make sure my website doesn't go down when people visit it?",
+    "Hi. I want a button here that does something like Facebook does. Why is it taking so long to build? It seems very simple.",
+    "Excuse me, I can't log in to the admin panel. It says 'Invalid Credentials' but I'm typing my name perfectly fine. Fix it please."
   ]
 };
 
@@ -839,6 +1095,14 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
+  
+  const [performanceStats, setPerformanceStats] = useState({
+    speaking_sum: 0,
+    speaking_count: 0,
+    listening_sum: 0,
+    listening_count: 0
+  });
+  const [showEgTranslation, setShowEgTranslation] = useState({});
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -856,6 +1120,9 @@ export default function App() {
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
 
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState('');
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [streakMessage, setStreakMessage] = useState(null);
   const [showDayCompleteAnimation, setShowDayCompleteAnimation] = useState(null);
@@ -866,6 +1133,16 @@ export default function App() {
   const lastScrollY = useRef(0);
   const [completedDays, setCompletedDays] = useState([]);
   const [dayTasks, setDayTasks] = useState({});
+  const [careerTrack, setCareerTrack] = useState('hospitality');
+
+  const CURRENT_LESSONS = careerTrack === 'it' ? IT_DATA.LESSONS_DATA : HOSPITALITY_DATA.LESSONS_DATA;
+  const CURRENT_VOCAB = careerTrack === 'it' ? IT_DATA.VOCABULARY_BANK : HOSPITALITY_DATA.VOCABULARY_BANK;
+  const CURRENT_SYLLABUS = careerTrack === 'it' ? IT_LESSONS_DATA : SYLLABUS;
+
+  const [allData, setAllData] = useState({ completed: {}, tasks: {} });
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTrackMenu, setShowTrackMenu] = useState(false);
+  const [showMobileTrackMenu, setShowMobileTrackMenu] = useState(false);
   const [quizInputs, setQuizInputs] = useState({});
   const [xp, setXp] = useState(120);
   const [streak, setStreak] = useState(5);
@@ -875,6 +1152,8 @@ export default function App() {
   const [lessonActiveSubTab, setLessonActiveSubTab] = useState('vocab');
   
   const [listeningSelectedOption, setListeningSelectedOption] = useState(null);
+  const [listeningPassFlags, setListeningPassFlags] = useState({ mcq: false, blank: false, scramble: false });
+  const [speakingPassScores, setSpeakingPassScores] = useState({});
   const [listeningShowResult, setListeningShowResult] = useState(false);
   const [listeningBlankInput, setListeningBlankInput] = useState('');
   const [listeningBlankCorrect, setListeningBlankCorrect] = useState(null);
@@ -885,6 +1164,122 @@ export default function App() {
 
   const [aiLessons, setAiLessons] = useState({});
   const [isLessonLoading, setIsLessonLoading] = useState(false);
+  const [dynamicExamples, setDynamicExamples] = useState({});
+  const [isGeneratingExamples, setIsGeneratingExamples] = useState({});
+  const [dialogTranslations, setDialogTranslations] = useState({});
+  const [isTranslatingDialog, setIsTranslatingDialog] = useState({});
+
+  const clearDialogTranslation = (id) => {
+    setDialogTranslations(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const translateDialogLine = async (text, id) => {
+    if (dialogTranslations[id]) {
+      clearDialogTranslation(id);
+      return;
+    }
+    if (isTranslatingDialog[id]) return;
+    setIsTranslatingDialog(prev => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDialogTranslations(prev => ({ ...prev, [id]: data.translated }));
+      } else {
+        const data = await res.json();
+        alert('Translation failed: ' + data.error);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Translation error: ' + e.message);
+    } finally {
+      setIsTranslatingDialog(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const [isTranslatingScenarioModal, setIsTranslatingScenarioModal] = useState(false);
+  const [scenarioModalTranslation, setScenarioModalTranslation] = useState('');
+
+  // Dictionary State
+  const [showDictionaryModal, setShowDictionaryModal] = useState(false);
+  const [dictSearchQuery, setDictSearchQuery] = useState('');
+  const [isLookingUpDict, setIsLookingUpDict] = useState(false);
+  const [dictResult, setDictResult] = useState(null);
+  const [isCopiedDict, setIsCopiedDict] = useState(false);
+
+  const handleCopyDict = () => {
+    if (dictResult) {
+      navigator.clipboard.writeText(`${dictResult.word}\n${dictResult.ipa}\n${dictResult.meaning}`);
+      setIsCopiedDict(true);
+      setTimeout(() => setIsCopiedDict(false), 2000);
+    }
+  };
+
+  const lookupDictionary = async (e) => {
+    e?.preventDefault();
+    if (!dictSearchQuery.trim() || isLookingUpDict) return;
+    setIsLookingUpDict(true);
+    setDictResult(null);
+    try {
+      const res = await fetch('/api/dictionary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word: dictSearchQuery.trim() })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDictResult(data);
+      } else {
+        const data = await res.json();
+        if (data.details?.includes('503') || data.details?.includes('high demand')) {
+          alert('Hệ thống AI của Google hiện đang quá tải. Vui lòng thử lại sau vài giây nhé!');
+        } else {
+          alert('Lỗi tra từ điển: ' + (data.error || 'Unknown'));
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Lỗi tra từ điển');
+    } finally {
+      setIsLookingUpDict(false);
+    }
+  };
+
+  const clearScenarioModalTranslation = () => {
+    setScenarioModalTranslation('');
+  };
+
+  const translateScenarioModal = async (text) => {
+    if (isTranslatingScenarioModal || scenarioModalTranslation) return;
+    setIsTranslatingScenarioModal(true);
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setScenarioModalTranslation(data.translated);
+      } else {
+        const data = await res.json();
+        alert('Translation failed: ' + data.error);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Translation error: ' + e.message);
+    } finally {
+      setIsTranslatingScenarioModal(false);
+    }
+  };
 
   const [customScenarioPrompt, setCustomScenarioPrompt] = useState("");
   const [isGeneratingScenario, setIsGeneratingScenario] = useState(false);
@@ -993,6 +1388,12 @@ export default function App() {
           let currentStreak = data.streak || 0;
           let lastDateStr = data.last_active_date;
           
+          if (data.display_name) {
+            setDisplayName(data.display_name);
+          } else {
+            setDisplayName(user.email.split('@')[0]);
+          }
+          
           const today = new Date();
           const todayStr = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
@@ -1031,7 +1432,7 @@ export default function App() {
                    });
                 } else {
                    // Streak lost
-                   currentStreak = 1;
+                   currentStreak = 0;
                    lastDateStr = todayStr;
                    didUpdateStreak = true;
                    setStreakMessage({ type: 'lost', missedDays, cost });
@@ -1041,11 +1442,48 @@ export default function App() {
 
           setXp(currentXp);
           setStreak(currentStreak);
-          setCompletedDays(data.completed_days || []);
-          setDayTasks(data.day_tasks || {});
+          
+          let allCompleted = data.completed_days || {};
+          let allTasks = data.day_tasks || {};
+
+          // Migrate old array completed_days
+          if (Array.isArray(allCompleted)) {
+            allCompleted = { hospitality: allCompleted, it: [] };
+          }
+          if (!allCompleted.hospitality) allCompleted.hospitality = [];
+          if (!allCompleted.it) allCompleted.it = [];
+
+          // Migrate old day_tasks
+          if (!allTasks.hospitality && !allTasks.it) {
+            const oldTasks = { ...allTasks };
+            allTasks = { hospitality: oldTasks, it: {}, careerTrack: allTasks.careerTrack, stats: allTasks.stats };
+          }
+          if (!allTasks.hospitality) allTasks.hospitality = {};
+          if (!allTasks.it) allTasks.it = {};
+          
+          setAllData({ completed: allCompleted, tasks: allTasks });
+
+          let currentTrack = allTasks.careerTrack || 'hospitality';
+          
+          const dt = allTasks[currentTrack] || {};
+          let currentStats = allTasks.stats || { speaking_count: 0, speaking_sum: 0, listening_count: 0, listening_sum: 0, roleplays_today: 0, flashcards_today: 0, last_target_date: todayStr };
+          
+          if (currentStats.last_target_date !== todayStr) {
+            currentStats.roleplays_today = 0;
+            currentStats.flashcards_today = 0;
+            currentStats.last_target_date = todayStr;
+          }
+          setPerformanceStats(currentStats);
+          
+          if (allTasks.careerTrack) {
+            setCareerTrack(allTasks.careerTrack);
+          } else {
+            setShowOnboarding(true);
+          }
+          
           setFavorites(data.favorites || []);
-          setAiScenarios(data.ai_scenarios || []);
-          setAiLessons(data.ai_lessons || {});
+          if (data.ai_scenarios) setAiScenarios(data.ai_scenarios);
+          if (data.ai_lessons) setAiLessons(data.ai_lessons);
           setLastActiveDate(lastDateStr);
           if (data.avatar_url) setAvatarUrl(data.avatar_url);
 
@@ -1057,11 +1495,21 @@ export default function App() {
               last_active_date: lastDateStr
             });
           }
+        } else {
+          // New user
+          setShowOnboarding(true);
         }
       };
       fetchProgress();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (Object.keys(allData.completed).length > 0) {
+       setCompletedDays(allData.completed[careerTrack] || []);
+       setDayTasks(allData.tasks[careerTrack] || {});
+    }
+  }, [careerTrack, allData]);
 
   useEffect(() => {
     if (activeTab === 'leaderboard') {
@@ -1081,6 +1529,18 @@ export default function App() {
     }
   }, [activeTab]);
 
+  const checkAndCompleteDay = (newTasksObj) => {
+    const tasks = newTasksObj[selectedDayId];
+    if (tasks?.vocab && tasks?.quiz && tasks?.speaking && tasks?.listening && !completedDays.includes(selectedDayId)) {
+      const newCompleted = [...completedDays, selectedDayId];
+      setCompletedDays(newCompleted);
+      syncProgress(undefined, undefined, newCompleted, undefined, undefined, undefined, undefined, newTasksObj);
+      setShowDayCompleteAnimation(selectedDayId);
+    } else {
+      syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, newTasksObj);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'lesson' && selectedDayId) {
       const correctCount = Object.values(quizAnswers).filter(a => a?.isCorrect).length;
@@ -1089,21 +1549,45 @@ export default function App() {
         if (!currentDayTasks.quiz) {
           const newTasks = { ...dayTasks, [selectedDayId]: { ...currentDayTasks, quiz: true } };
           setDayTasks(newTasks);
-          
-          if (newTasks[selectedDayId].vocab && !completedDays.includes(selectedDayId)) {
-            const newCompleted = [...completedDays, selectedDayId];
-            setCompletedDays(newCompleted);
-            syncProgress(undefined, undefined, newCompleted, undefined, undefined, undefined, undefined, newTasks);
-            setShowDayCompleteAnimation(selectedDayId);
-          } else {
-            syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, newTasks);
-          }
+          checkAndCompleteDay(newTasks);
         }
       }
     }
   }, [quizAnswers, selectedDayId, activeTab]);
 
-  const syncProgress = async (newXp, newStreak, newCompleted, newFavs, newScenarios, newAiLessons, newAvatarUrl, newDayTasks) => {
+  useEffect(() => {
+    if (activeTab === 'lesson' && selectedDayId && listeningPassFlags.mcq && listeningPassFlags.blank && listeningPassFlags.scramble) {
+      const currentDayTasks = dayTasks[selectedDayId] || {};
+      if (!currentDayTasks.listening) {
+        const newTasks = { ...dayTasks, [selectedDayId]: { ...currentDayTasks, listening: true } };
+        setDayTasks(newTasks);
+        checkAndCompleteDay(newTasks);
+      }
+    }
+  }, [listeningPassFlags, selectedDayId, activeTab, dayTasks]);
+
+  useEffect(() => {
+    if (activeTab === 'lesson' && selectedDayId) {
+      const currentLesson = aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1];
+      const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
+      const totalSentences = speakingData.length;
+      
+      const scores = Object.values(speakingPassScores);
+      if (scores.length === totalSentences && totalSentences > 0) {
+        const avg = scores.reduce((a, b) => a + b, 0) / totalSentences;
+        if (avg > 70) {
+          const currentDayTasks = dayTasks[selectedDayId] || {};
+          if (!currentDayTasks.speaking) {
+            const newTasks = { ...dayTasks, [selectedDayId]: { ...currentDayTasks, speaking: true } };
+            setDayTasks(newTasks);
+            checkAndCompleteDay(newTasks);
+          }
+        }
+      }
+    }
+  }, [speakingPassScores, selectedDayId, activeTab, dayTasks, aiLessons]);
+
+  const syncProgress = async (newXp, newStreak, newCompleted, newFavs, newScenarios, newAiLessons, newAvatarUrl, newDayTasks, newPerformanceStats, newCareerTrack, newDisplayName) => {
     if (!user) return;
     const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     
@@ -1113,17 +1597,33 @@ export default function App() {
       finalStreak = 1;
       setStreak(1);
     }
+    
+    let dt = newDayTasks !== undefined ? newDayTasks : dayTasks;
+    let finalStats = newPerformanceStats !== undefined ? newPerformanceStats : performanceStats;
+    let trackToSave = newCareerTrack !== undefined ? newCareerTrack : careerTrack;
+    
+    // Here we save under the CURRENT careerTrack state because dt and newCompleted belong to it
+    const updatedCompleted = { ...allData.completed, [careerTrack]: newCompleted !== undefined ? newCompleted : completedDays };
+    const updatedAllTasks = { 
+       ...allData.tasks, 
+       [careerTrack]: dt,
+       careerTrack: trackToSave,
+       stats: finalStats
+    };
+    
+    setAllData(prev => ({ ...prev, completed: updatedCompleted, tasks: updatedAllTasks }));
 
     await supabase.from('user_progress').upsert({
       id: user.id,
       xp: newXp !== undefined ? newXp : xp,
       streak: finalStreak,
-      completed_days: newCompleted !== undefined ? newCompleted : completedDays,
-      day_tasks: newDayTasks !== undefined ? newDayTasks : dayTasks,
+      completed_days: updatedCompleted,
+      day_tasks: updatedAllTasks,
       favorites: newFavs !== undefined ? newFavs : favorites,
       ai_scenarios: newScenarios !== undefined ? newScenarios : aiScenarios,
       ai_lessons: newAiLessons !== undefined ? newAiLessons : aiLessons,
       avatar_url: newAvatarUrl !== undefined ? newAvatarUrl : avatarUrl,
+      display_name: newDisplayName !== undefined ? newDisplayName : displayName,
       last_active_date: todayStr,
     });
   };
@@ -1138,7 +1638,7 @@ export default function App() {
       const fetchAiLesson = async () => {
         setIsLessonLoading(true);
         try {
-          const vocabList = LESSONS_DATA[selectedDayId]?.vocab || LESSONS_DATA[1].vocab;
+          const vocabList = CURRENT_LESSONS[selectedDayId]?.vocab || CURRENT_LESSONS[1].vocab;
           const res = await fetch('/api/lesson', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1196,7 +1696,7 @@ export default function App() {
 
   // Smart Flashcards States
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
-  const [shuffledFlashcards, setShuffledFlashcards] = useState(VOCABULARY_BANK);
+  const [shuffledFlashcards, setShuffledFlashcards] = useState(CURRENT_VOCAB);
   const [currentFlashcardOptions, setCurrentFlashcardOptions] = useState([]);
   const [flashcardWrongAttempts, setFlashcardWrongAttempts] = useState([]);
   const [flashcardCorrectAttempt, setFlashcardCorrectAttempt] = useState(null);
@@ -1210,6 +1710,17 @@ export default function App() {
   const [roleplayPersona, setRoleplayPersona] = useState('Khách VIP khó tính');
   const [roleplaySpeechEnabled, setRoleplaySpeechEnabled] = useState(true);
   const [voices, setVoices] = useState([]);
+
+  useEffect(() => {
+    const defaultPersona = careerTrack === 'it' ? 'Khách hàng khó tính' : 'Khách VIP khó tính';
+    if (roleplayPersona !== defaultPersona && !['Khách VIP khó tính', 'Khách du lịch', 'Khách doanh nhân', 'Khách hàng khó tính', 'Quản lý dự án', 'Đồng nghiệp tester'].includes(roleplayPersona)) {
+       // if we want to be safe, just always reset when track changes
+    }
+    setRoleplayPersona(defaultPersona);
+    setRoleplayMessages([
+      { sender: 'guest', text: getRandomRoleplayStart(defaultPersona), voicePlayed: false }
+    ]);
+  }, [careerTrack]);
 
   useEffect(() => {
     const savedCompletedDays = localStorage.getItem(COMPLETED_DAYS_KEY);
@@ -1282,6 +1793,9 @@ export default function App() {
     }
     setFavorites(updated);
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
+    if (user) {
+      syncProgress(undefined, undefined, undefined, updated);
+    }
   };
 
   const speakText = (text, lang = "en") => {
@@ -1392,7 +1906,7 @@ export default function App() {
   };
 
   const handleStartSpeakingPractice = () => {
-    const currentLesson = aiLessons[selectedDayId] || LESSONS_DATA[selectedDayId] || LESSONS_DATA[1];
+    const currentLesson = aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1];
     const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
     const currentPrompt = speakingData[currentSpeakingIndex] || speakingData[0];
     
@@ -1421,6 +1935,14 @@ export default function App() {
           }
           if (data.score > 0) {
             addXp(Math.round(data.score / 5));
+            const newStats = {
+              ...performanceStats,
+              speaking_sum: (performanceStats?.speaking_sum || 0) + data.score,
+              speaking_count: (performanceStats?.speaking_count || 0) + 1
+            };
+            setPerformanceStats(newStats);
+            setSpeakingPassScores(prev => ({ ...prev, [currentSpeakingIndex]: data.score }));
+            syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
           }
         } else {
           setSpeakingScore(0);
@@ -1442,7 +1964,7 @@ export default function App() {
   };
 
   const startVocabCheck = (shuffle = false) => {
-    const vocabList = LESSONS_DATA[selectedDayId]?.vocab || LESSONS_DATA[1].vocab;
+    const vocabList = CURRENT_LESSONS[selectedDayId]?.vocab || CURRENT_LESSONS[1].vocab;
     const list = shuffle ? [...vocabList].sort(() => 0.5 - Math.random()) : vocabList;
     setShuffledVocabCheckList(list);
     setCurrentVocabCheckIndex(0);
@@ -1452,6 +1974,44 @@ export default function App() {
     }
     setIsVocabCheckMode(true);
   };
+  const generateDynamicExample = async (word) => {
+    if (isGeneratingExamples[word] || dynamicExamples[selectedDayId]?.[word]) return;
+    setIsGeneratingExamples(prev => ({ ...prev, [word]: true }));
+    try {
+      const res = await fetch('/api/examples', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ words: [word], industry: careerTrack === 'hospitality' ? 'Khách sạn/Nhà hàng 5 sao' : 'Công nghệ thông tin / Software Engineering' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const item = data[0];
+          setDynamicExamples(prev => ({
+            ...prev,
+            [selectedDayId]: {
+              ...(prev[selectedDayId] || {}),
+              [word]: { eg: item.eg, eg_vn: item.eg_vn }
+            }
+          }));
+        }
+      } else {
+        const errorText = await res.text();
+        console.error("Failed to generate example", errorText);
+        if (errorText.includes("503") || errorText.includes("high demand")) {
+          alert("Hệ thống AI của Google hiện đang quá tải (High Demand - 503). Vui lòng thử lại sau vài giây nhé!");
+        } else {
+          alert("Lỗi khi gọi AI tạo ví dụ. Vui lòng thử lại sau.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Lỗi kết nối khi tạo ví dụ AI.");
+    } finally {
+      setIsGeneratingExamples(prev => ({ ...prev, [word]: false }));
+    }
+  };
+
 
   const handleVocabCheckAnswer = (selectedMean) => {
     if (vocabCheckAnswerState) return; // Prevent multiple clicks
@@ -1480,7 +2040,7 @@ export default function App() {
       
       const nextIndex = currentVocabCheckIndex + 1;
       if (nextIndex < shuffledVocabCheckList.length) {
-        const vocabList = LESSONS_DATA[selectedDayId]?.vocab || LESSONS_DATA[1].vocab;
+        const vocabList = CURRENT_LESSONS[selectedDayId]?.vocab || CURRENT_LESSONS[1].vocab;
         setCurrentVocabCheckOptions(generateVocabCheckOptions(shuffledVocabCheckList[nextIndex], vocabList));
       } else {
         // Finished vocab quiz
@@ -1489,15 +2049,7 @@ export default function App() {
           if (!currentDayTasks.vocab) {
             const newTasks = { ...dayTasks, [selectedDayId]: { ...currentDayTasks, vocab: true } };
             setDayTasks(newTasks);
-            
-            if (newTasks[selectedDayId].quiz && !completedDays.includes(selectedDayId)) {
-              const newCompleted = [...completedDays, selectedDayId];
-              setCompletedDays(newCompleted);
-              syncProgress(undefined, undefined, newCompleted, undefined, undefined, undefined, undefined, newTasks);
-              setShowDayCompleteAnimation(selectedDayId);
-            } else {
-              syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, newTasks);
-            }
+            checkAndCompleteDay(newTasks);
           }
         }
       }
@@ -1507,13 +2059,13 @@ export default function App() {
   };
 
   const startSmartFlashcards = (shuffle = false) => {
-    const list = shuffle ? [...VOCABULARY_BANK].sort(() => 0.5 - Math.random()) : VOCABULARY_BANK;
+    const list = shuffle ? [...CURRENT_VOCAB].sort(() => 0.5 - Math.random()) : CURRENT_VOCAB;
     setShuffledFlashcards(list);
     setCurrentFlashcardIndex(0);
     setFlashcardWrongAttempts([]);
     setFlashcardCorrectAttempt(null);
     if (list.length > 0) {
-      setCurrentFlashcardOptions(generateVocabCheckOptions(list[0], VOCABULARY_BANK));
+      setCurrentFlashcardOptions(generateVocabCheckOptions(list[0], CURRENT_VOCAB));
     }
   };
 
@@ -1536,7 +2088,14 @@ export default function App() {
         setCurrentFlashcardIndex(nextIndex);
         setFlashcardWrongAttempts([]);
         setFlashcardCorrectAttempt(null);
-        setCurrentFlashcardOptions(generateVocabCheckOptions(shuffledFlashcards[nextIndex], VOCABULARY_BANK));
+        setCurrentFlashcardOptions(generateVocabCheckOptions(shuffledFlashcards[nextIndex], CURRENT_VOCAB));
+        
+        const newStats = {
+          ...performanceStats,
+          flashcards_today: (performanceStats?.flashcards_today || 0) + 1
+        };
+        setPerformanceStats(newStats);
+        syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
       }, 1000);
     } else {
       if (!flashcardWrongAttempts.includes(selectedMean)) {
@@ -1552,7 +2111,7 @@ export default function App() {
       const res = await fetch('/api/roleplay-starter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ persona, difficulty })
+        body: JSON.stringify({ persona, difficulty, careerTrack })
       });
       if (res.ok) {
         const data = await res.json();
@@ -1583,9 +2142,11 @@ export default function App() {
     setIsRoleplayLoading(true);
 
     try {
-      const historyContext = roleplayMessages.map(m => 
-        m.sender === 'receptionist' ? `Receptionist (User): ${m.text}` : `Guest (AI): ${m.text}`
-      ).join('\n');
+      const historyContext = roleplayMessages.map(m => {
+        const userRole = careerTrack === 'it' ? 'Developer' : 'Receptionist';
+        const aiRole = careerTrack === 'it' ? 'Partner/Client' : 'Guest';
+        return m.sender === 'receptionist' ? `${userRole} (User): ${m.text}` : `${aiRole} (AI): ${m.text}`;
+      }).join('\n');
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -1594,7 +2155,8 @@ export default function App() {
           history: historyContext,
           currentInput: promptToSend,
           persona: roleplayPersona,
-          difficulty: roleplayDifficulty
+          difficulty: roleplayDifficulty,
+          careerTrack: careerTrack
         })
       });
 
@@ -1613,7 +2175,12 @@ export default function App() {
       setRoleplayMessages(prev => [...prev, botMsg]);
       const newXp = xp + 15;
       setXp(newXp);
-      syncProgress(newXp, undefined, undefined, undefined, undefined);
+      const newStats = {
+        ...performanceStats,
+        roleplays_today: (performanceStats?.roleplays_today || 0) + 1
+      };
+      setPerformanceStats(newStats);
+      syncProgress(newXp, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
 
       if (roleplaySpeechEnabled) {
         const textToSpeak = responseText.replace(/\[.*\]/g, "").trim();
@@ -1648,7 +2215,7 @@ export default function App() {
       const res = await fetch('/api/scenario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: customScenarioPrompt })
+        body: JSON.stringify({ prompt: customScenarioPrompt, careerTrack })
       });
       if (res.ok) {
         const newScenario = await res.json();
@@ -1665,20 +2232,22 @@ export default function App() {
   };
 
   const setupScrambledExercise = (lessonId) => {
-    const lData = aiLessons[lessonId] || LESSONS_DATA[lessonId] || LESSONS_DATA[1];
+    const lData = aiLessons[lessonId] || CURRENT_LESSONS[lessonId] || CURRENT_LESSONS[1];
     setListeningScrambledWords([...lData.listening.scrambled].sort(() => Math.random() - 0.5));
     setListeningScrambledResult([]);
   };
 
   useEffect(() => {
     if (activeTab === 'flashcards' && currentFlashcardOptions.length === 0 && shuffledFlashcards.length > 0) {
-      setCurrentFlashcardOptions(generateVocabCheckOptions(shuffledFlashcards[0], VOCABULARY_BANK));
+      setCurrentFlashcardOptions(generateVocabCheckOptions(shuffledFlashcards[0], CURRENT_VOCAB));
     }
   }, [activeTab]);
 
   useEffect(() => {
     setupScrambledExercise(selectedDayId);
     setListeningSelectedOption(null);
+    setListeningPassFlags({ mcq: false, blank: false, scramble: false });
+    setSpeakingPassScores({});
     setListeningShowResult(false);
     setListeningBlankInput('');
     setListeningBlankCorrect(null);
@@ -1799,9 +2368,13 @@ export default function App() {
           <div className="min-w-0">
             <h1 className="text-sm sm:text-lg lg:text-xl font-bold tracking-tight text-[#1D1D1F] truncate">
               <span className="sm:hidden">CareerLingo</span>
-              <span className="hidden sm:inline">HOTEL RECEPTION ENGLISH MASTER</span>
+              <span className="hidden sm:inline">
+                {careerTrack === 'it' ? "IT ENGLISH MASTER" : "HOTEL RECEPTION ENGLISH MASTER"}
+              </span>
             </h1>
-            <p className="hidden sm:block text-[10px] uppercase tracking-widest text-[#6E6E73] font-semibold truncate">5-Star Luxury Standard</p>
+            <p className="hidden sm:block text-[10px] uppercase tracking-widest text-[#6E6E73] font-semibold truncate">
+              {careerTrack === 'it' ? "Tech Industry Standard" : "5-Star Luxury Standard"}
+            </p>
           </div>
         </div>
 
@@ -1815,11 +2388,23 @@ export default function App() {
               <Star className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400 fill-amber-400" />
               <span className="text-xs sm:text-sm font-semibold text-[#1D1D1F]">{xp} <span className="hidden sm:inline">XP</span></span>
             </div>
-            <div className="hidden md:flex items-center gap-2 text-xs text-[#0071E3] font-medium mr-2">
+          <div className="hidden md:flex items-center gap-2 text-xs text-[#0071E3] font-medium mr-2">
               <Award className="w-4 h-4" />
               <span>Premium Access</span>
             </div>
           </div>
+
+          <button
+            onClick={() => {
+              setActiveTab('vocabulary');
+              setSelectedVocabCategory('Favorites');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center justify-center bg-[#FF9500]/10 hover:bg-[#FF9500]/20 transition-colors w-7 h-7 sm:w-9 sm:h-9 rounded-full border border-[#FF9500]/20 text-[#FF9500]"
+            title="Sổ tay từ vựng"
+          >
+            <BookmarkCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
 
           <div className="relative" ref={userMenuRef}>
             <button
@@ -1837,12 +2422,55 @@ export default function App() {
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Tài khoản</p>
-                  <p className="text-sm font-semibold text-gray-900 truncate">
-                    {user?.email}
-                  </p>
+
+                  <div className="mt-2 flex items-center justify-between">
+                    {isEditingName ? (
+                      <div className="flex items-center gap-2 w-full">
+                        <input
+                          type="text"
+                          value={tempName}
+                          onChange={(e) => setTempName(e.target.value)}
+                          className="w-full text-sm font-bold text-[#1D1D1F] border border-blue-500 rounded px-2 py-1 outline-none"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              setDisplayName(tempName);
+                              setIsEditingName(false);
+                              syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
+                            } else if (e.key === 'Escape') {
+                              setIsEditingName(false);
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            setDisplayName(tempName);
+                            setIsEditingName(false);
+                            syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 p-1 bg-blue-50 rounded"
+                        >
+                          <Check className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 w-full group">
+                        <p className="text-sm font-bold text-[#1D1D1F] truncate">{displayName || user?.email}</p>
+                        <button
+                          onClick={() => {
+                            setTempName(displayName || user?.email?.split('@')[0] || '');
+                            setIsEditingName(true);
+                          }}
+                          className="text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="p-2 border-b border-gray-100">
                   <button
@@ -1855,6 +2483,43 @@ export default function App() {
                     <User className="w-4 h-4 text-[#1D1D1F]" />
                     Hồ sơ của tôi
                   </button>
+                  <div className="px-3 py-2 mt-1 relative">
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2">Chuyên ngành học</p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowTrackMenu(!showTrackMenu);
+                      }}
+                      className="w-full flex items-center justify-between bg-[#F5F5F7] border border-gray-200 text-sm font-semibold text-[#1D1D1F] rounded-lg px-3 py-2 hover:bg-gray-100 transition-colors"
+                    >
+                      <span className="truncate">{careerTrack === 'hospitality' ? 'Khách sạn (Hospitality)' : 'Công nghệ thông tin (IT)'}</span>
+                      <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showTrackMenu ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showTrackMenu && (
+                      <div className="absolute left-3 right-3 top-[100%] mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                        <button
+                          onClick={() => {
+                            setCareerTrack('hospitality');
+                            syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'hospitality');
+                            setShowTrackMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm font-semibold text-[#1D1D1F] hover:bg-gray-50 transition-colors"
+                        >
+                          Khách sạn (Hospitality)
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCareerTrack('it');
+                            syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'it');
+                            setShowTrackMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm font-semibold text-[#1D1D1F] border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                        >
+                          Công nghệ thông tin (IT)
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => {
                       setShowAvatarModal(true);
@@ -1974,6 +2639,126 @@ export default function App() {
           {activeTab === 'dashboard' && (
             <div className="space-y-8 animate-fadeIn">
               
+              <div className="bg-[#FFFFFF]/90 border border-gray-100 rounded-[1.5rem] sm:rounded-3xl lg:rounded-[2.5rem] shadow-[0_20px_40px_rgba(0,0,0,0.04)] overflow-hidden backdrop-blur-xl flex flex-col md:flex-row">
+                {/* Left Pane: Input */}
+                <div className="w-full md:w-1/2 p-3 sm:p-5 lg:p-8 border-b md:border-b-0 md:border-r border-gray-100 flex flex-col bg-[#FAFAFA]">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Nhập văn bản (Anh / Việt)</span>
+                  </div>
+                  <form onSubmit={lookupDictionary} className="flex-1 flex flex-col relative">
+                    <textarea 
+                      value={dictSearchQuery}
+                      onChange={(e) => {
+                        setDictSearchQuery(e.target.value);
+                        if (!e.target.value.trim()) {
+                          setDictResult(null);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          lookupDictionary(e);
+                        }
+                      }}
+                      placeholder="Nhập từ vựng, cụm từ tiếng Anh hoặc tiếng Việt..."
+                      className="w-full flex-1 bg-transparent border-none focus:ring-0 resize-none text-lg sm:text-3xl font-bold text-[#1D1D1F] placeholder-gray-300 min-h-[60px] sm:min-h-[120px] px-0"
+                    />
+                    <div className="flex justify-between items-center mt-2 sm:mt-4">
+                      <p className="text-[10px] sm:text-xs text-gray-400 font-medium">Bấm Enter để dịch</p>
+                      <button 
+                        type="submit"
+                        disabled={isLookingUpDict || !dictSearchQuery.trim()}
+                        className="bg-[#0071E3] text-white p-2 sm:p-3 rounded-xl sm:rounded-2xl hover:bg-blue-600 transition-colors disabled:opacity-50"
+                      >
+                        {isLookingUpDict ? <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4 sm:w-6 sm:h-6" />}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Swap Icon (Absolute center on desktop) */}
+                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-12 -translate-y-12 w-12 h-12 bg-white rounded-full border border-gray-100 shadow-sm items-center justify-center z-10 text-gray-400">
+                  <ArrowRightLeft className="w-5 h-5" />
+                </div>
+
+                {/* Right Pane: Result */}
+                <div className={`w-full md:w-1/2 p-4 sm:p-5 lg:p-8 flex-col bg-white sm:min-h-[250px] ${!dictResult && !isLookingUpDict ? 'hidden md:flex' : 'flex min-h-[150px]'}`}>
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <span className="text-xs sm:text-sm font-semibold text-[#0071E3] uppercase tracking-wider">Bản dịch (Anh / Việt)</span>
+                  </div>
+                  
+                  <div className="flex-1">
+                    {isLookingUpDict ? (
+                      <div className="flex flex-col items-center justify-center h-full space-y-3 sm:space-y-4 opacity-50">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-[#0071E3]/20 border-t-[#0071E3] rounded-full animate-spin" />
+                        <p className="text-xs sm:text-sm font-medium text-gray-500 animate-pulse">Đang dịch...</p>
+                      </div>
+                    ) : dictResult ? (
+                      <div className="space-y-4 sm:space-y-6 animate-fadeIn">
+                        <div className="flex items-start justify-between gap-2 sm:gap-4">
+                          <div>
+                            <h4 className="text-xl sm:text-3xl font-extrabold text-[#1D1D1F] break-words">{dictResult.word}</h4>
+                            <p className="text-[#6E6E73] font-medium font-mono text-xs sm:text-base mt-1">{dictResult.ipa}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => toggleFavorite(dictResult.word)}
+                              className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-colors ${favorites.includes(dictResult.word) ? 'bg-[#FF9500]/10 text-[#FF9500]' : 'bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                              title="Lưu từ vựng"
+                            >
+                              {favorites.includes(dictResult.word) ? <BookmarkCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />}
+                            </button>
+                            <button
+                              onClick={handleCopyDict}
+                              className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-colors ${isCopiedDict ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                              title="Copy"
+                            >
+                              {isCopiedDict ? <Check className="w-5 h-5 sm:w-6 sm:h-6" /> : <Copy className="w-5 h-5 sm:w-6 sm:h-6" />}
+                            </button>
+                            <button 
+                              onClick={() => speakText(dictResult.word)}
+                              className="bg-blue-50 text-[#0071E3] hover:bg-blue-100 p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-colors"
+                              title="Nghe"
+                            >
+                              <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-base sm:text-2xl text-[#1D1D1F] font-semibold leading-relaxed">{dictResult.meaning}</p>
+                        </div>
+
+                        {dictResult.examples && dictResult.examples.length > 0 && (
+                          <div className="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-gray-100">
+                            <h5 className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#6E6E73]">Ví dụ</h5>
+                            <div className="space-y-2 sm:space-y-3">
+                              {dictResult.examples.map((eg, idx) => (
+                                <div key={idx} className="group cursor-pointer">
+                                  <div className="flex items-start justify-between gap-1 sm:gap-2">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-600 flex-1">{eg}</p>
+                                    <button 
+                                      onClick={() => speakText(eg.split(/[\-\(\n]/)[0] || eg)}
+                                      className="text-gray-400 hover:text-[#0071E3] opacity-0 group-hover:opacity-100 transition-opacity p-1 shrink-0"
+                                    >
+                                      <Volume2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-center space-y-2 sm:space-y-3 opacity-30 py-4 sm:py-0">
+                        <BookOpen className="w-10 h-10 sm:w-16 sm:h-16 text-gray-400" />
+                        <p className="text-xs sm:text-base text-gray-500 font-medium max-w-[150px] sm:max-w-[200px]">Nghĩa của từ sẽ xuất hiện ở đây.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="bg-[#FFFFFF]/90 border border-gray-100 rounded-[1.5rem] sm:rounded-3xl lg:rounded-[2.5rem] p-5 lg:p-10 shadow-[0_20px_40px_rgba(0,0,0,0.04)] relative overflow-hidden backdrop-blur-xl">
                 <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 rounded-full bg-blue-500/5 blur-3xl pointer-events-none"></div>
                 
@@ -2040,22 +2825,22 @@ export default function App() {
                   </div>
                   <ul className="space-y-4">
                     <li className="flex items-start gap-4 text-base">
-                      <div className="mt-1 bg-green-100 text-green-600 p-1 rounded-full">
-                        <Check className="w-4 h-4" />
+                      <div className={`mt-1 p-1 rounded-full ${completedDays.includes(selectedDayId) ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {completedDays.includes(selectedDayId) ? <Check className="w-4 h-4" /> : <div className="w-4 h-4" />}
                       </div>
-                      <span className="text-[#6E6E73] font-medium">Complete module: <strong className="text-[#1D1D1F]">Day 1: Chào hỏi khách hàng</strong></span>
+                      <span className="text-[#6E6E73] font-medium">Complete module: <strong className="text-[#1D1D1F]">Day {selectedDayId}: {(aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1]).title}</strong></span>
                     </li>
                     <li className="flex items-start gap-4 text-base">
-                      <div className="mt-1 bg-gray-100 text-gray-400 p-1 rounded-full">
-                        <div className="w-4 h-4" />
+                      <div className={`mt-1 p-1 rounded-full ${(performanceStats?.roleplays_today || 0) >= 3 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {(performanceStats?.roleplays_today || 0) >= 3 ? <Check className="w-4 h-4" /> : <div className="w-4 h-4" />}
                       </div>
-                      <span className="text-[#6E6E73] font-medium">Interact with AI Roleplay <strong className="text-[#1D1D1F]">3 times</strong></span>
+                      <span className="text-[#6E6E73] font-medium">Interact with AI Roleplay <strong className="text-[#1D1D1F]">{(performanceStats?.roleplays_today || 0)}/3 times</strong></span>
                     </li>
                     <li className="flex items-start gap-4 text-base">
-                      <div className="mt-1 bg-gray-100 text-gray-400 p-1 rounded-full">
-                        <div className="w-4 h-4" />
+                      <div className={`mt-1 p-1 rounded-full ${(performanceStats?.flashcards_today || 0) >= 10 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {(performanceStats?.flashcards_today || 0) >= 10 ? <Check className="w-4 h-4" /> : <div className="w-4 h-4" />}
                       </div>
-                      <span className="text-[#6E6E73] font-medium">Review <strong className="text-[#1D1D1F]">10 Flashcards</strong></span>
+                      <span className="text-[#6E6E73] font-medium">Review <strong className="text-[#1D1D1F]">{(performanceStats?.flashcards_today || 0)}/10 Flashcards</strong></span>
                     </li>
                   </ul>
                 </div>
@@ -2068,11 +2853,19 @@ export default function App() {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="bg-[#F5F5F7] p-4 rounded-2xl">
                       <div className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wider mb-1">Speaking</div>
-                      <div className="text-2xl font-bold text-[#1D1D1F]">{Math.min(100, Math.floor(xp / 15) + 50)}%</div>
+                      <div className="text-2xl font-bold text-[#1D1D1F]">
+                        {performanceStats.speaking_count > 0 
+                          ? Math.round(performanceStats.speaking_sum / performanceStats.speaking_count) 
+                          : 0}%
+                      </div>
                     </div>
                     <div className="bg-[#F5F5F7] p-4 rounded-2xl">
                       <div className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wider mb-1">Listening</div>
-                      <div className="text-2xl font-bold text-[#1D1D1F]">{Math.min(100, Math.floor(xp / 12) + 55)}%</div>
+                      <div className="text-2xl font-bold text-[#1D1D1F]">
+                        {performanceStats.listening_count > 0 
+                          ? Math.round(performanceStats.listening_sum / performanceStats.listening_count) 
+                          : 0}%
+                      </div>
                     </div>
                     <div className="bg-[#F5F5F7] p-4 rounded-2xl">
                       <div className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wider mb-1">Vocab</div>
@@ -2097,7 +2890,7 @@ export default function App() {
                 </div>
               </div>
 
-              {SYLLABUS.map((week) => (
+              {CURRENT_SYLLABUS.map((week) => (
                 <div key={week.week} className="bg-[#FFFFFF]/90 border border-gray-100 rounded-[1.5rem] sm:rounded-3xl lg:rounded-[2rem] p-5 lg:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-4 lg:space-y-6">
                   <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                     <h3 className="font-bold text-xl text-[#1D1D1F]">{week.weekTitle}</h3>
@@ -2176,7 +2969,7 @@ export default function App() {
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-[#0071E3] font-bold uppercase tracking-widest bg-[#0071E3]/10 px-3 py-1.5 rounded-full">Day {selectedDayId} / 30</span>
                   <h2 className="text-lg lg:text-xl font-bold text-[#1D1D1F] tracking-tight">
-                    {SYLLABUS.flatMap(w => w.days).find(d => d.id === selectedDayId)?.title || "Lesson"}
+                    {CURRENT_SYLLABUS.flatMap(w => w.days).find(d => d.id === selectedDayId)?.title || "Lesson"}
                   </h2>
                 </div>
                 {completedDays.includes(selectedDayId) && (
@@ -2219,7 +3012,7 @@ export default function App() {
               )}
 
               {lessonActiveSubTab === 'vocab' && (() => {
-                const vocabList = LESSONS_DATA[selectedDayId]?.vocab || LESSONS_DATA[1].vocab;
+                const vocabList = CURRENT_LESSONS[selectedDayId]?.vocab || CURRENT_LESSONS[1].vocab;
                 
                 if (isVocabCheckMode) {
                   if (currentVocabCheckIndex >= shuffledVocabCheckList.length && shuffledVocabCheckList.length > 0) {
@@ -2346,7 +3139,13 @@ export default function App() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {vocabList.map((v, idx) => (
+                    {vocabList.map((v, idx) => {
+                      const dynamicEgObj = dynamicExamples[selectedDayId]?.[v.word];
+                      const displayEg = dynamicEgObj?.eg || v.eg;
+                      const displayEgVn = dynamicEgObj?.eg_vn || v.eg_vn;
+                      const isGenerating = isGeneratingExamples[v.word];
+
+                      return (
                       <div key={idx} className="bg-[#FFFFFF]/90 border border-gray-100 p-5 rounded-2xl flex justify-between items-start hover:shadow-lg transition-all duration-300">
                         <div className="space-y-2 flex-1">
                           <div className="flex flex-col gap-1.5">
@@ -2354,7 +3153,38 @@ export default function App() {
                             <span className="inline-block text-xs text-[#6E6E73] font-mono bg-gray-100 px-2 py-1 rounded-md w-fit">{v.ipa}</span>
                           </div>
                           <div className="text-base font-semibold text-[#0071E3]">{v.mean}</div>
-                          <p className="text-sm italic text-[#6E6E73] mt-2">" {v.eg} "</p>
+                          <div className="mt-2">
+                            <p className="text-sm italic text-[#6E6E73]">" {displayEg} "</p>
+                            {showEgTranslation[v.word] && displayEgVn && (
+                              <p className="text-sm text-[#0071E3] mt-1 font-medium">{displayEgVn}</p>
+                            )}
+                            <div className="flex items-center gap-4 mt-2">
+                              <button
+                                onClick={() => setShowEgTranslation(prev => ({...prev, [v.word]: !prev[v.word]}))}
+                                className="text-[10px] uppercase font-bold text-gray-400 hover:text-[#0071E3] transition-colors flex items-center gap-1"
+                              >
+                                <Languages className="w-3 h-3" />
+                                {showEgTranslation[v.word] ? "Ẩn dịch" : "Dịch nghĩa"}
+                              </button>
+                              
+                              {!dynamicEgObj && (
+                                <button
+                                  onClick={() => generateDynamicExample(v.word)}
+                                  disabled={isGenerating}
+                                  className="text-[10px] uppercase font-bold text-blue-500 hover:text-blue-700 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                >
+                                  <Sparkles className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                                  {isGenerating ? "Đang tạo..." : "AI Tạo ví dụ xịn"}
+                                </button>
+                              )}
+                              {dynamicEgObj && (
+                                <span className="text-[10px] uppercase font-bold text-green-500 flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3" />
+                                  AI Generated
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                         <div className="flex gap-2 ml-4">
                           <button 
@@ -2375,7 +3205,8 @@ export default function App() {
                           </button>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 </div>
               )})()}
@@ -2388,19 +3219,41 @@ export default function App() {
                   </div>
 
                   <div className="bg-[#FFFFFF]/90 border border-gray-100 rounded-[2rem] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6">
-                    {(aiLessons[selectedDayId]?.dialogue || LESSONS_DATA[selectedDayId]?.dialogue || LESSONS_DATA[1].dialogue).map((line, idx) => (
+                    {(aiLessons[selectedDayId]?.dialogue || CURRENT_LESSONS[selectedDayId]?.dialogue || CURRENT_LESSONS[1].dialogue).map((line, idx) => (
                       <div key={idx} className={`flex items-start gap-4 ${line.speaker === 'Receptionist' ? '' : 'flex-row-reverse'}`}>
                         <div className={`p-3 rounded-2xl text-xs font-bold uppercase tracking-widest ${line.speaker === 'Receptionist' ? 'bg-[#0071E3]/10 text-[#0071E3]' : 'bg-gray-100 text-[#6E6E73]'}`}>
                           {line.speaker === 'Receptionist' ? "Receptionist" : "Guest"}
                         </div>
                         <div className={`flex-1 p-5 rounded-2xl border ${line.speaker === 'Receptionist' ? 'bg-white border-gray-200' : 'bg-[#F5F5F7] border-transparent'}`}>
                           <p className="text-base font-medium text-[#1D1D1F] leading-relaxed">{line.text}</p>
+                          {dialogTranslations[`${selectedDayId}-${idx}`] && (
+                            <div className="mt-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100 relative group">
+                              <button 
+                                onClick={() => clearDialogTranslation(`${selectedDayId}-${idx}`)}
+                                className="absolute top-1.5 right-1.5 p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100/50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                title="Đóng bản dịch"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                              <p className="text-sm text-[#0071E3] font-medium pr-6">
+                                {dialogTranslations[`${selectedDayId}-${idx}`]}
+                              </p>
+                            </div>
+                          )}
                           <div className="mt-3 flex gap-3">
                             <button 
                               onClick={() => speakText(line.text)}
                               className="flex items-center gap-1.5 text-xs font-bold text-[#0071E3] hover:text-[#005bb5] transition-colors bg-[#0071E3]/5 px-3 py-1.5 rounded-lg"
                             >
                               <Play className="w-3.5 h-3.5" /> Play Audio
+                            </button>
+                            <button 
+                              onClick={() => translateDialogLine(line.text, `${selectedDayId}-${idx}`)}
+                              disabled={isTranslatingDialog[`${selectedDayId}-${idx}`]}
+                              className="flex items-center gap-1.5 text-xs font-bold text-[#FF9500] hover:text-[#d97c00] transition-colors bg-[#FF9500]/5 px-3 py-1.5 rounded-lg disabled:opacity-50"
+                            >
+                              <Languages className={`w-3.5 h-3.5 ${isTranslatingDialog[`${selectedDayId}-${idx}`] ? 'animate-spin' : ''}`} /> 
+                              {isTranslatingDialog[`${selectedDayId}-${idx}`] ? 'Đang dịch...' : 'Dịch nghĩa'}
                             </button>
                           </div>
                         </div>
@@ -2420,26 +3273,63 @@ export default function App() {
                   <div className="bg-[#FFFFFF]/90 border border-gray-100 p-8 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6">
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-xs bg-[#F5F5F7] text-[#6E6E73] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-gray-200">Exercise 1: Multiple Choice</span>
-                      <button 
-                        onClick={() => speakText((aiLessons[selectedDayId]?.dialogue || LESSONS_DATA[selectedDayId]?.dialogue || LESSONS_DATA[1].dialogue).map(d => d.text).join(" "))}
-                        className="flex items-center gap-2 text-sm font-bold text-[#1D1D1F] bg-[#F5F5F7] hover:bg-gray-200 transition-all px-4 py-2 rounded-xl"
-                      >
-                        <Volume2 className="w-4 h-4" /> Play Full Audio
-                      </button>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => translateDialogLine((aiLessons[selectedDayId]?.dialogue || CURRENT_LESSONS[selectedDayId]?.dialogue || CURRENT_LESSONS[1].dialogue).map(d => d.text).join(" "), `listening-full-${selectedDayId}`)}
+                          disabled={isTranslatingDialog[`listening-full-${selectedDayId}`]}
+                          className="flex items-center gap-2 text-sm font-bold text-[#FF9500] bg-[#FF9500]/10 hover:bg-[#FF9500]/20 transition-all px-4 py-2 rounded-xl disabled:opacity-50"
+                        >
+                          <Languages className={`w-4 h-4 ${isTranslatingDialog[`listening-full-${selectedDayId}`] ? 'animate-spin' : ''}`} /> 
+                          {isTranslatingDialog[`listening-full-${selectedDayId}`] ? 'Đang dịch...' : 'Dịch bài nghe'}
+                        </button>
+                        <button 
+                          onClick={() => speakText((aiLessons[selectedDayId]?.dialogue || CURRENT_LESSONS[selectedDayId]?.dialogue || CURRENT_LESSONS[1].dialogue).map(d => d.text).join(" "))}
+                          className="flex items-center gap-2 text-sm font-bold text-[#1D1D1F] bg-[#F5F5F7] hover:bg-gray-200 transition-all px-4 py-2 rounded-xl"
+                        >
+                          <Volume2 className="w-4 h-4" /> Play Full Audio
+                        </button>
+                      </div>
                     </div>
 
-                    <h4 className="font-bold text-lg text-[#1D1D1F]">{(aiLessons[selectedDayId]?.listening || LESSONS_DATA[selectedDayId]?.listening || LESSONS_DATA[1].listening).question}</h4>
+                    {dialogTranslations[`listening-full-${selectedDayId}`] && (
+                      <div className="mb-6 p-5 bg-[#FF9500]/10 rounded-2xl border-2 border-[#FF9500] animate-fadeIn shadow-inner relative group">
+                        <button 
+                          onClick={() => clearDialogTranslation(`listening-full-${selectedDayId}`)}
+                          className="absolute top-3 right-3 p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-100/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          title="Đóng bản dịch"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        <h4 className="text-sm font-bold uppercase text-[#FF9500] tracking-widest mb-2 flex items-center gap-2">
+                          <Languages className="w-4 h-4" /> Bản dịch Audio:
+                        </h4>
+                        <p className="text-base text-[#1D1D1F] leading-relaxed font-medium">{dialogTranslations[`listening-full-${selectedDayId}`]}</p>
+                      </div>
+                    )}
+
+                    <h4 className="font-bold text-lg text-[#1D1D1F]">{(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).question}</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      {(aiLessons[selectedDayId]?.listening || LESSONS_DATA[selectedDayId]?.listening || LESSONS_DATA[1].listening).options.map((opt, idx) => {
-                        const isCorrect = opt === (aiLessons[selectedDayId]?.listening || LESSONS_DATA[selectedDayId]?.listening || LESSONS_DATA[1].listening).answer;
+                      {(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).options.map((opt, idx) => {
+                        const isCorrect = opt === (aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).answer;
                         return (
                           <button
                             key={idx}
                             onClick={() => {
+                              if (listeningShowResult) return;
                               setListeningSelectedOption(opt);
                               setListeningShowResult(true);
-                              if (isCorrect) addXp(20);
+                              if (isCorrect) {
+                                addXp(20);
+                                setListeningPassFlags(prev => ({ ...prev, mcq: true }));
+                              }
+                              const newStats = {
+                                ...performanceStats,
+                                listening_sum: (performanceStats?.listening_sum || 0) + (isCorrect ? 100 : 0),
+                                listening_count: (performanceStats?.listening_count || 0) + 1
+                              };
+                              setPerformanceStats(newStats);
+                              syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
                             }}
                             className={`p-5 rounded-2xl border text-left text-base font-semibold transition-all ${listeningShowResult ? (isCorrect ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-300 text-red-600') : (listeningSelectedOption === opt ? 'bg-[#0071E3]/10 border-[#0071E3] text-[#0071E3]' : 'bg-white border-gray-200 hover:border-gray-400')}`}
                           >
@@ -2455,7 +3345,7 @@ export default function App() {
                     <h4 className="font-bold text-lg text-[#1D1D1F]">Listen and type the missing word:</h4>
                     
                     <p className="p-5 bg-[#F5F5F7] rounded-2xl text-[#1D1D1F] text-lg italic border border-gray-200">
-                      "{(aiLessons[selectedDayId]?.listening || LESSONS_DATA[selectedDayId]?.listening || LESSONS_DATA[1].listening).blankSentence}"
+                      "{(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).blankSentence}"
                     </p>
 
                     <div className="flex gap-4 max-w-lg">
@@ -2470,11 +3360,21 @@ export default function App() {
                         placeholder="Type the word..."
                         className="bg-white border border-gray-300 rounded-xl px-5 py-3 text-base font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] flex-1 shadow-sm"
                       />
-                      <button 
+                      <button
                         onClick={() => {
-                          const isCorrect = listeningBlankInput.trim().toLowerCase() === (aiLessons[selectedDayId]?.listening || LESSONS_DATA[selectedDayId]?.listening || LESSONS_DATA[1].listening).blankAnswer.toLowerCase();
+                          const isCorrect = listeningBlankInput.trim().toLowerCase() === (aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).blankAnswer.toLowerCase();
                           setListeningBlankCorrect(isCorrect);
-                          if (isCorrect) addXp(25);
+                          if (isCorrect) {
+                             addXp(25);
+                             setListeningPassFlags(prev => ({ ...prev, blank: true }));
+                          }
+                          const newStats = {
+                            ...performanceStats,
+                            listening_sum: (performanceStats?.listening_sum || 0) + (isCorrect ? 100 : 0),
+                            listening_count: (performanceStats?.listening_count || 0) + 1
+                          };
+                          setPerformanceStats(newStats);
+                          syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
                         }}
                         className="bg-[#1D1D1F] hover:bg-[#333336] text-white font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-md"
                       >
@@ -2484,7 +3384,7 @@ export default function App() {
 
                     {listeningBlankCorrect !== null && (
                       <div className={`flex items-center gap-2 text-base font-bold ${listeningBlankCorrect ? 'text-green-600' : 'text-red-500'}`}>
-                        {listeningBlankCorrect ? "✓ Excellent! +25 XP." : `✗ Incorrect. The answer is: "${(aiLessons[selectedDayId]?.listening || LESSONS_DATA[selectedDayId]?.listening || LESSONS_DATA[1].listening).blankAnswer}"`}
+                        {listeningBlankCorrect ? "✓ Excellent! +25 XP." : `✗ Incorrect. The answer is: "${(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).blankAnswer}"`}
                       </div>
                     )}
                   </div>
@@ -2527,13 +3427,22 @@ export default function App() {
                       <button 
                         onClick={() => {
                           const sentence = listeningScrambledResult.join(' ');
-                          const standard = (aiLessons[selectedDayId]?.listening || LESSONS_DATA[selectedDayId]?.listening || LESSONS_DATA[1].listening).scrambledAnswer;
-                          if (sentence === standard) {
+                          const standard = (aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).scrambledAnswer;
+                          const isCorrect = sentence === standard;
+                          if (isCorrect) {
                             setScrambledFeedback({ type: 'success', text: 'Chính xác! Excellent job forming the sentence. (+30 XP)' });
                             addXp(30);
+                            setListeningPassFlags(prev => ({ ...prev, scramble: true }));
                           } else {
                             setScrambledFeedback({ type: 'error', text: 'Sai thứ tự rồi. Hãy nhấn Reset để thử lại!' });
                           }
+                          const newStats = {
+                            ...performanceStats,
+                            listening_sum: (performanceStats?.listening_sum || 0) + (isCorrect ? 100 : 0),
+                            listening_count: (performanceStats?.listening_count || 0) + 1
+                          };
+                          setPerformanceStats(newStats);
+                          syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
                         }}
                         className="bg-[#0071E3] hover:bg-[#005bb5] text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-md"
                       >
@@ -2561,7 +3470,7 @@ export default function App() {
               )}
 
               {lessonActiveSubTab === 'speaking' && !isLessonLoading && (() => {
-                const currentLesson = aiLessons[selectedDayId] || LESSONS_DATA[selectedDayId] || LESSONS_DATA[1];
+                const currentLesson = aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1];
                 const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
                 const currentPrompt = speakingData[currentSpeakingIndex] || speakingData[0];
                 
@@ -2666,7 +3575,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-6">
-                    {(aiLessons[selectedDayId]?.quiz || LESSONS_DATA[selectedDayId]?.quiz || LESSONS_DATA[1].quiz).map((q, qidx) => (
+                    {(aiLessons[selectedDayId]?.quiz || CURRENT_LESSONS[selectedDayId]?.quiz || CURRENT_LESSONS[1].quiz).map((q, qidx) => (
                       <div key={qidx} className="bg-[#FFFFFF]/90 border border-gray-100 p-8 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-5">
                         <h4 className="font-bold text-lg text-[#1D1D1F]">{qidx + 1}. {q.q}</h4>
                         <div className="flex flex-col md:flex-row gap-4 items-stretch">
@@ -2745,7 +3654,7 @@ export default function App() {
                     <Compass className="text-[#0071E3] w-8 h-8" />
                     Scenario Library
                   </h2>
-                  <p className="text-lg text-[#6E6E73] font-medium mt-2">100+ real-world hospitality situations and resolutions.</p>
+                  <p className="text-lg text-[#6E6E73] font-medium mt-2">100+ real-world {careerTrack === 'hospitality' ? 'hospitality' : 'IT/Software'} situations and resolutions.</p>
                 </div>
               </div>
 
@@ -2790,7 +3699,7 @@ export default function App() {
                 </div>
 
                 <div className="flex gap-2 overflow-x-auto w-full md:w-auto no-scrollbar py-1">
-                  {['All', 'Check-in', 'Check-out', 'Concierge', 'Complaint Handling', 'VIP Service', 'Emergency'].map((cat) => (
+                  {(careerTrack === 'it' ? ['All', 'Incident Response', 'Project Management', 'Development', 'Architecture', 'QA/Testing', 'Deployment'] : ['All', 'Check-in', 'Check-out', 'Concierge', 'Complaint Handling', 'VIP Service', 'Emergency']).map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setLibraryCategory(cat)}
@@ -2803,13 +3712,16 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[...aiScenarios, ...SITUATIONS]
+                {[...aiScenarios, ...(careerTrack === 'it' ? IT_SITUATIONS : SITUATIONS)]
                   .filter(s => libraryCategory === 'All' || s.category === libraryCategory)
                   .filter(s => s.title.toLowerCase().includes(librarySearch.toLowerCase()) || s.desc.toLowerCase().includes(librarySearch.toLowerCase()))
                   .map((s) => (
                     <div 
                       key={s.id}
-                      onClick={() => setSelectedSituation(s)}
+                      onClick={() => {
+                        setSelectedSituation(s);
+                        setScenarioModalTranslation('');
+                      }}
                       className="bg-[#FFFFFF]/90 border border-gray-100 p-6 rounded-[2rem] cursor-pointer hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
                     >
                       <div className="space-y-3">
@@ -2854,24 +3766,73 @@ export default function App() {
                     <div className="space-y-4">
                       <h4 className="text-xs font-bold uppercase text-[#1D1D1F] tracking-widest">Sample Interaction:</h4>
                       <div className="space-y-4 bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
-                        {selectedSituation.dialog.split('\n').map((line, lidx) => {
-                          const isRep = line.startsWith('R:');
+                        {selectedSituation.dialog.replace(/(?<!^)(?=\b[A-Z0-9]{1,3}:\s)/g, '\n').split('\n').filter(line => line.trim() !== '').map((line, lidx) => {
+                          const match = line.match(/^([A-Z0-9]+):\s*(.*)/);
+                          const speakerCode = match ? match[1] : '';
+                          const cleanText = match ? match[2] : line;
+                          
+                          const isRep = speakerCode === 'R' || speakerCode.startsWith('D') || speakerCode === 'TL';
+                          
+                          let speakerName = "Guest";
+                          if (careerTrack === 'hospitality') {
+                            speakerName = isRep ? "Receptionist" : "Guest";
+                          } else {
+                            if (speakerCode === 'C') speakerName = "Client / Manager";
+                            else if (speakerCode.startsWith('D')) speakerName = "Developer";
+                            else if (speakerCode === 'TL') speakerName = "Tech Lead";
+                            else speakerName = speakerCode || "Speaker";
+                          }
+
                           return (
-                            <div key={lidx} className="space-y-1">
-                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">{isRep ? "Receptionist" : "Guest"}:</span>
-                              <p className={`text-base ${isRep ? 'text-[#0071E3] font-semibold' : 'text-[#1D1D1F] font-medium'}`}>{line.replace(/^[R|G]:\s*/, '')}</p>
+                            <div key={lidx} className="space-y-1 group/line">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{speakerName}:</span>
+                                <div className="flex gap-2 opacity-100 md:opacity-0 group-hover/line:opacity-100 transition-opacity">
+                                  <button 
+                                    onClick={() => translateDialogLine(cleanText, `scenario-${selectedSituation.id}-${lidx}`)}
+                                    disabled={isTranslatingDialog[`scenario-${selectedSituation.id}-${lidx}`]}
+                                    className="flex items-center justify-center p-1.5 text-[#FF9500] hover:text-[#d97c00] hover:bg-[#FF9500]/10 rounded-lg transition-colors disabled:opacity-50"
+                                    title="Dịch nghĩa"
+                                  >
+                                    <Languages className={`w-3.5 h-3.5 ${isTranslatingDialog[`scenario-${selectedSituation.id}-${lidx}`] ? 'animate-spin' : ''}`} />
+                                  </button>
+                                  <button 
+                                    onClick={() => speakText(cleanText)}
+                                    className="flex items-center justify-center p-1.5 text-[#1D1D1F] hover:bg-gray-200 rounded-lg transition-colors"
+                                    title="Nghe"
+                                  >
+                                    <Volume2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                              <p className={`text-base ${isRep ? 'text-[#0071E3] font-semibold' : 'text-[#1D1D1F] font-medium'}`}>{cleanText}</p>
+                              {dialogTranslations[`scenario-${selectedSituation.id}-${lidx}`] && (
+                                <div className="mt-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100 relative group/trans">
+                                  <button 
+                                    onClick={() => clearDialogTranslation(`scenario-${selectedSituation.id}-${lidx}`)}
+                                    className="absolute top-1.5 right-1.5 p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100/50 rounded-md transition-colors opacity-100 md:opacity-0 md:group-hover/trans:opacity-100"
+                                    title="Đóng bản dịch"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                  <p className="text-sm text-[#0071E3] font-medium pr-6">
+                                    {dialogTranslations[`scenario-${selectedSituation.id}-${lidx}`]}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
                       </div>
                     </div>
 
-                    <div className="flex gap-4 justify-end pt-4 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-4 justify-end pt-4 border-t border-gray-100">
+
                       <button
                         onClick={() => {
                           speakText(selectedSituation.dialog);
                         }}
-                        className="bg-[#F5F5F7] hover:bg-gray-200 text-[#1D1D1F] font-bold text-sm px-6 py-3 rounded-xl transition-all flex items-center gap-2"
+                        className="bg-[#0071E3]/10 hover:bg-[#0071E3]/20 text-[#0071E3] font-bold text-sm px-6 py-3 rounded-xl transition-all flex items-center gap-2"
                       >
                         <Volume2 className="w-4 h-4" /> Listen
                       </button>
@@ -2953,13 +3914,14 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {VOCABULARY_BANK
-                  .filter(v => {
-                    if (selectedVocabCategory === 'All') return true;
-                    if (selectedVocabCategory === 'Favorites') return favorites.includes(v.word);
-                    return true;
-                  })
-                  .filter(v => v.word.toLowerCase().includes(vocabSearch.toLowerCase()) || v.mean.toLowerCase().includes(vocabSearch.toLowerCase()))
+                {(selectedVocabCategory === 'Favorites' 
+                  ? favorites.slice().reverse().map(word => {
+                      const existing = CURRENT_VOCAB.find(v => v.word.toLowerCase() === word.toLowerCase());
+                      return existing || { word, mean: 'Từ vựng tra cứu thêm (nhập vào ô tìm kiếm để tra lại nghĩa)', ipa: '', category: 'Saved Custom', eg: '' };
+                    })
+                  : CURRENT_VOCAB
+                )
+                  .filter(v => v.word.toLowerCase().includes(vocabSearch.toLowerCase()) || (v.mean && v.mean.toLowerCase().includes(vocabSearch.toLowerCase())))
                   .map((v, idx) => (
                     <div key={idx} className="bg-[#FFFFFF]/90 border border-gray-100 p-6 rounded-2xl flex justify-between items-start hover:shadow-lg transition-all duration-300 group">
                       <div className="space-y-2 flex-1">
@@ -2969,7 +3931,19 @@ export default function App() {
                         </div>
                         <span className="inline-block text-[9px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-bold uppercase tracking-widest mb-1.5">{v.category}</span>
                         <div className="text-base font-semibold text-[#0071E3]">{v.mean}</div>
-                        <p className="text-sm italic text-[#6E6E73] mt-2">" {v.eg} "</p>
+                        <div className="mt-2">
+                          <p className="text-sm italic text-[#6E6E73]">" {v.eg} "</p>
+                          {showEgTranslation[v.word] && v.eg_vn && (
+                            <p className="text-sm text-[#0071E3] mt-1 font-medium">{v.eg_vn}</p>
+                          )}
+                          <button
+                            onClick={() => setShowEgTranslation(prev => ({...prev, [v.word]: !prev[v.word]}))}
+                            className="text-[10px] uppercase font-bold text-gray-400 hover:text-[#0071E3] mt-1 transition-colors flex items-center gap-1"
+                          >
+                            <Languages className="w-3 h-3" />
+                            {showEgTranslation[v.word] ? "Ẩn dịch" : "Dịch nghĩa"}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex gap-2 ml-4">
@@ -3090,7 +4064,7 @@ export default function App() {
                       <Sparkles className="text-blue-500 w-8 h-8" />
                       Live AI Role Play
                     </h2>
-                    <p className="text-base text-[#6E6E73] font-medium">Powered by advanced AI. Talk to a virtual hotel guest in real-time.</p>
+                    <p className="text-base text-[#6E6E73] font-medium">Powered by advanced AI. Talk to a virtual {careerTrack === 'hospitality' ? 'hotel guest' : 'client / manager'} in real-time.</p>
                   </div>
                   
                   <div className="flex gap-3">
@@ -3112,9 +4086,9 @@ export default function App() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t border-blue-100 relative z-10">
                   <div className="space-y-3">
-                    <label className="text-[11px] font-bold uppercase tracking-widest text-[#6E6E73]">Guest Persona</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-[#6E6E73]">{careerTrack === 'hospitality' ? 'Guest Persona' : 'Persona'}</label>
                     <div className="flex flex-wrap gap-2">
-                      {['Khách VIP khó tính', 'Khách du lịch', 'Khách doanh nhân'].map((p) => (
+                      {(careerTrack === 'hospitality' ? ['Khách VIP khó tính', 'Khách du lịch', 'Khách doanh nhân', 'Khách đi gia đình'] : ['Khách hàng khó tính', 'Quản lý dự án', 'Đồng nghiệp tester', 'Tech Lead / CTO', 'Khách hàng non-tech']).map((p) => (
                         <button
                           key={p}
                           onClick={() => {
@@ -3183,12 +4157,38 @@ export default function App() {
                           )}
 
                           {isBot && textPart && (
-                            <button 
-                              onClick={() => speakText(textPart)}
-                              className="text-xs text-[#0071E3] font-bold hover:text-[#005bb5] flex items-center gap-1.5 pt-2"
-                            >
-                              <Volume2 className="w-4 h-4" /> Listen
-                            </button>
+                            <div>
+                              {dialogTranslations[`roleplay-${idx}`] && (
+                                <div className="mt-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100 relative group">
+                                  <button 
+                                    onClick={() => clearDialogTranslation(`roleplay-${idx}`)}
+                                    className="absolute top-1.5 right-1.5 p-1 text-blue-400 hover:text-blue-600 hover:bg-blue-100/50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                    title="Đóng bản dịch"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                  <p className="text-sm text-[#0071E3] font-medium pr-6">
+                                    {dialogTranslations[`roleplay-${idx}`]}
+                                  </p>
+                                </div>
+                              )}
+                              <div className="flex gap-4 pt-2">
+                                <button 
+                                  onClick={() => speakText(textPart)}
+                                  className="text-xs text-[#0071E3] font-bold hover:text-[#005bb5] flex items-center gap-1.5"
+                                >
+                                  <Volume2 className="w-4 h-4" /> Listen
+                                </button>
+                                <button 
+                                  onClick={() => translateDialogLine(textPart, `roleplay-${idx}`)}
+                                  disabled={isTranslatingDialog[`roleplay-${idx}`]}
+                                  className="text-xs text-[#FF9500] font-bold hover:text-[#d97c00] flex items-center gap-1.5 disabled:opacity-50"
+                                >
+                                  <Languages className={`w-3.5 h-3.5 ${isTranslatingDialog[`roleplay-${idx}`] ? 'animate-spin' : ''}`} /> 
+                                  {isTranslatingDialog[`roleplay-${idx}`] ? 'Đang dịch...' : 'Dịch nghĩa'}
+                                </button>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -3368,6 +4368,52 @@ export default function App() {
         </div>
       )}
 
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[200] flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-8 sm:p-10 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-blue-50 rounded-[2rem] mx-auto flex items-center justify-center mb-6 shadow-inner">
+                <Compass className="w-10 h-10 text-blue-600" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1D1D1F] tracking-tight mb-3">Chào mừng đến với CareerLingo!</h2>
+              <p className="text-gray-500 text-sm sm:text-base font-medium">Vui lòng chọn chuyên ngành bạn muốn theo học để chúng tôi thiết lập lộ trình phù hợp nhất.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => {
+                  setCareerTrack('hospitality');
+                  syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'hospitality');
+                  setShowOnboarding(false);
+                }}
+                className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all ${careerTrack === 'hospitality' ? 'border-blue-500 bg-blue-50/50 scale-[1.02]' : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'}`}
+              >
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl">🏨</span>
+                </div>
+                <h3 className="font-bold text-lg text-[#1D1D1F] mb-1">Khách sạn</h3>
+                <p className="text-xs text-gray-500 text-center font-medium">Tiếng Anh Lễ Tân 5 Sao</p>
+              </button>
+              <button
+                onClick={() => {
+                  setCareerTrack('it');
+                  syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'it');
+                  setShowOnboarding(false);
+                }}
+                className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all ${careerTrack === 'it' ? 'border-indigo-500 bg-indigo-50/50 scale-[1.02]' : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'}`}
+              >
+                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl">💻</span>
+                </div>
+                <h3 className="font-bold text-lg text-[#1D1D1F] mb-1">Công nghệ (IT)</h3>
+                <p className="text-xs text-gray-500 text-center font-medium">Tiếng Anh Kỹ Sư Phần Mềm</p>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Avatar Selection Modal */}
       {showAvatarModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fadeIn">
@@ -3436,9 +4482,59 @@ export default function App() {
                 <Smile className="w-4 h-4" />
               </button>
             </div>
-            
-            <h2 className="text-xl sm:text-2xl font-bold text-[#1D1D1F] tracking-tight truncate w-full px-2">{user?.email || "Chưa đăng nhập"}</h2>
-            <p className="text-xs sm:text-sm text-[#0071E3] mt-2 font-semibold bg-blue-50 px-3 py-1 rounded-full inline-block">Học viên Lễ Tân VIP</p>
+            <div className="w-full px-4 mt-2">
+              {isEditingName ? (
+                <div className="flex flex-col items-center gap-3">
+                  <input
+                    type="text"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    className="w-full text-center text-xl sm:text-2xl font-bold text-[#1D1D1F] border-b-2 border-blue-500 bg-transparent px-2 py-1 outline-none"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setDisplayName(tempName);
+                        setIsEditingName(false);
+                        syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
+                      } else if (e.key === 'Escape') {
+                        setIsEditingName(false);
+                      }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setDisplayName(tempName);
+                        setIsEditingName(false);
+                        syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, tempName);
+                      }}
+                      className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm"
+                    >
+                      Lưu tên
+                    </button>
+                    <button
+                      onClick={() => setIsEditingName(false)}
+                      className="text-gray-500 bg-gray-100 hover:bg-gray-200 px-4 py-1.5 rounded-full text-sm font-semibold"
+                    >
+                      Hủy
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 group cursor-pointer" onClick={() => {
+                  setTempName(displayName || user?.email?.split('@')[0] || '');
+                  setIsEditingName(true);
+                }}>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#1D1D1F] tracking-tight truncate max-w-[200px] sm:max-w-[300px]">
+                    {displayName || user?.email || "Chưa đăng nhập"}
+                  </h2>
+                  <Edit3 className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                </div>
+              )}
+            </div>
+            <p className="text-xs sm:text-sm text-[#0071E3] mt-3 font-semibold bg-blue-50 px-3 py-1 rounded-full inline-block">
+              Học viên {careerTrack === 'hospitality' ? 'Lễ Tân' : 'IT'} VIP
+            </p>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-8 w-full">
               <div className="bg-white border border-gray-100 rounded-3xl p-4 sm:p-5 flex flex-col items-center justify-center shadow-sm">
@@ -3458,6 +4554,44 @@ export default function App() {
             </div>
             
             <div className="mt-8 pt-6 border-t border-gray-100 w-full flex flex-col gap-3">
+              <div className="w-full text-left mb-2 relative">
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-2 ml-1">Chuyên ngành học</p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMobileTrackMenu(!showMobileTrackMenu);
+                  }}
+                  className="w-full flex items-center justify-between bg-[#F5F5F7] border border-gray-200 text-sm font-semibold text-[#1D1D1F] rounded-2xl px-5 py-4 hover:bg-gray-100 transition-colors"
+                >
+                  <span className="truncate">{careerTrack === 'hospitality' ? 'Khách sạn (Hospitality)' : 'Công nghệ thông tin (IT)'}</span>
+                  <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${showMobileTrackMenu ? 'rotate-180' : ''}`} />
+                </button>
+                {showMobileTrackMenu && (
+                  <div className="absolute left-0 right-0 top-[100%] mt-2 bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden z-50">
+                    <button
+                      onClick={() => {
+                        setCareerTrack('hospitality');
+                        syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'hospitality');
+                        setShowMobileTrackMenu(false);
+                      }}
+                      className="w-full text-left px-5 py-4 text-sm font-semibold text-[#1D1D1F] hover:bg-gray-50 transition-colors"
+                    >
+                      Khách sạn (Hospitality)
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCareerTrack('it');
+                        syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 'it');
+                        setShowMobileTrackMenu(false);
+                      }}
+                      className="w-full text-left px-5 py-4 text-sm font-semibold text-[#1D1D1F] border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      Công nghệ thông tin (IT)
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={() => {
                   if (notificationsEnabled) {
@@ -3571,10 +4705,10 @@ export default function App() {
 
       {/* Mobile Floating Bottom Navigation */}
       <div 
-        className={`lg:hidden fixed z-50 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] origin-bottom flex justify-center ${
+        className={`lg:hidden fixed z-50 transition-all duration-200 ease-out origin-bottom flex justify-center left-4 right-4 bottom-5 ${
           isNavVisible 
-            ? 'left-4 right-4 bottom-5 scale-100' 
-            : 'left-12 right-12 bottom-3 scale-[0.8]'
+            ? 'scale-100' 
+            : 'scale-75'
         }`}
       >
         <div className="w-full">
@@ -3623,6 +4757,8 @@ export default function App() {
         </nav>
         </div>
       </div>
+
+
 
     </div>
   );

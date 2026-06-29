@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request) {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    
+
     if (!apiKey) {
       return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
@@ -65,7 +65,7 @@ Quy định:
 - Đảm bảo tính logic, chuyên nghiệp, tiếng Anh chuẩn bản xứ.`;
 
     const userQuery = `Hãy tạo JSON bài giảng sử dụng các từ vựng sau: ${vocabWords}`;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
     const payload = {
       contents: [{ parts: [{ text: userQuery }] }],
