@@ -32,18 +32,27 @@ export async function GET(req) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const today = new Date().toISOString().split('T')[0];
 
-    // Find users who haven't learned today and have push subscriptions
-    const { data: users, error } = await supabase
+    // Lấy tất cả user có push_subscriptions, lọc trong JS vì completed_days là jsonb nested
+    const { data: allUsers, error } = await supabase
       .from('user_progress')
-      .select('id, display_name, last_active_date, push_subscriptions')
-      .neq('last_active_date', today)
+      .select('id, display_name, completed_days, push_subscriptions')
       .not('push_subscriptions', 'is', null);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (!users || users.length === 0) {
+    // Chỉ nhắc user chưa hoàn thành bài học hôm nay (completed_days là object theo career track)
+    const users = (allUsers || []).filter(u => {
+      if (!u.push_subscriptions || !Array.isArray(u.push_subscriptions) || u.push_subscriptions.length === 0) return false;
+      const completed = u.completed_days;
+      if (!completed || typeof completed !== 'object') return true; // Chưa học gì → nhắc
+      // Check tất cả career tracks, nếu bất kỳ track nào có today thì coi như đã học
+      const allDays = Object.values(completed).flat();
+      return !allDays.includes(today);
+    });
+
+    if (users.length === 0) {
       return NextResponse.json({ success: true, message: 'No users to notify' });
     }
 
