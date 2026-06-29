@@ -71,7 +71,8 @@ create table public.messages (
   sender_id uuid references auth.users not null,
   receiver_id uuid references auth.users not null,
   content text not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  is_read boolean default false
 );
 
 -- Bật Row Level Security cho bảng messages
@@ -86,6 +87,11 @@ create policy "Users can send messages"
 create policy "Users can read own messages"
   on messages for select
   using ( auth.uid() = sender_id or auth.uid() = receiver_id );
+
+-- Cho phép người nhận cập nhật trạng thái đã đọc
+create policy "Users can update received messages"
+  on messages for update
+  using ( auth.uid() = receiver_id );
 
 -- View an toàn để tìm kiếm người dùng (chỉ lấy id, tên, avatar)
 drop view if exists public.chat_users_view;

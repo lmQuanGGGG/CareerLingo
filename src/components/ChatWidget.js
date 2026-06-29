@@ -92,8 +92,11 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
         filter: `receiver_id=eq.${user.id}`
       }, (payload) => {
         const newMsg = payload.new;
-        // If we are currently chatting with the sender, append message
+        // If we are currently chatting with the sender, append message and mark as read
         if (viewState === 'room' && activeChatUser && newMsg.sender_id === activeChatUser.id) {
+          supabase.from('messages').update({ is_read: true }).eq('id', newMsg.id).then();
+          newMsg.is_read = true;
+          
           setMessages(prev => [...prev, newMsg]);
           scrollToBottom();
         } else {
@@ -162,6 +165,14 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
           
         if (data && !error) {
           setMessages(data);
+          
+          // Mark unread messages from this user as read
+          const unreadIds = data.filter(m => m.receiver_id === user.id && !m.is_read).map(m => m.id);
+          if (unreadIds.length > 0) {
+            supabase.from('messages').update({ is_read: true }).in('id', unreadIds).then();
+            // Update local state optimisticly
+            setMessages(prev => prev.map(m => unreadIds.includes(m.id) ? { ...m, is_read: true } : m));
+          }
         }
         setIsLoadingMessages(false);
       };
@@ -388,7 +399,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                         )}
                         <div className="flex-1 truncate">
                           <div className="flex justify-between items-baseline mb-0.5">
-                            <h4 className="font-semibold text-sm text-gray-900 truncate capitalize">{u.display_name}</h4>
+                            <h4 className={`text-sm truncate capitalize ${u.latestMessage && u.latestMessage.sender_id !== user.id && !u.latestMessage.is_read ? 'font-extrabold text-[#1D1D1F]' : 'font-semibold text-gray-900'}`}>{u.display_name}</h4>
                             {u.latestMessage && (
                               <span className="text-[10px] text-gray-400 shrink-0 ml-2">
                                 {new Date(u.latestMessage.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}
@@ -396,7 +407,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                             )}
                           </div>
                           {u.latestMessage ? (
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className={`text-xs truncate ${u.latestMessage.sender_id !== user.id && !u.latestMessage.is_read ? 'font-bold text-black' : 'text-gray-500'}`}>
                               {u.latestMessage.sender_id === user.id ? 'Bạn: ' : ''}
                               {u.latestMessage.content.startsWith('[VOCAB_CARD]') ? 'Đã chia sẻ một từ vựng' : u.latestMessage.content}
                             </p>
