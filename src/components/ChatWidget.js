@@ -536,7 +536,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
-                      className="w-full bg-gray-100 rounded-full py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-gray-500/20 transition-all"
+                      className="w-full bg-gray-100 rounded-full py-2 pl-9 pr-4 text-base outline-none focus:ring-2 focus:ring-gray-500/20 transition-all"
                     />
                   </div>
                 </div>
@@ -737,7 +737,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                       onFocus={() => { setIsKeyboardOpen(true); setTimeout(scrollToBottom, 300); }}
                       onBlur={() => setIsKeyboardOpen(false)}
                       placeholder="Nhắn tin..." 
-                      className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:bg-gray-50 border border-transparent focus:border-gray-300 transition-colors"
+                      className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-base outline-none focus:bg-gray-50 border border-transparent focus:border-gray-300 transition-colors"
                     />
                     <button 
                       type="submit"
