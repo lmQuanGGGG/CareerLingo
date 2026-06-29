@@ -37,7 +37,7 @@ export async function GET(req) {
       .from('user_progress')
       .select('id, display_name, last_active_date, push_subscriptions')
       .neq('last_active_date', today)
-      .not('push_subscriptions', 'eq', '[]'); // JSON '[]'
+      .not('push_subscriptions', 'is', null);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -58,7 +58,7 @@ export async function GET(req) {
 
     for (const user of users) {
       const subs = user.push_subscriptions;
-      if (!Array.isArray(subs)) continue;
+      if (!Array.isArray(subs) || subs.length === 0) continue;
 
       let validSubs = [];
       let subsChanged = false;
