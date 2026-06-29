@@ -96,18 +96,20 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
   // Focus or open the app window
+  const targetUrl = event.notification.data || '/';
+  
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       // Check if there is already a window/tab open with the target URL
       for (let i = 0; i < windowClients.length; i++) {
         let client = windowClients[i];
         if (client.url.includes(self.registration.scope) && 'focus' in client) {
-          return client.focus();
+          return client.focus().then(c => c.navigate(targetUrl));
         }
       }
       // If not, open a new window
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow(targetUrl);
       }
     })
   );
