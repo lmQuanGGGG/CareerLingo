@@ -4377,7 +4377,11 @@ export default function App() {
                   <Trophy className="w-10 h-10 text-amber-500" />
                 </div>
                 <h2 className="text-3xl lg:text-4xl font-bold text-[#1D1D1F] tracking-tight">Hall of Fame</h2>
-                <p className="text-lg text-[#6E6E73] font-medium">Top receptionists across luxury hotels in Vietnam.</p>
+                <p className="text-lg text-[#6E6E73] font-medium">
+                  {careerTrack === 'hospitality' ? 'Top receptionists across luxury hotels.' : 
+                   careerTrack === 'it' ? 'Top software engineers & developers.' : 
+                   'Top professionals across all industries.'}
+                </p>
               </div>
 
               <div className="bg-[#FFFFFF]/90 border border-gray-100 rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
