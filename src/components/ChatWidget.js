@@ -21,6 +21,7 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
   const [newMessage, setNewMessage] = useState('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [showVocabPicker, setShowVocabPicker] = useState(false);
+  const [vocabSearchQuery, setVocabSearchQuery] = useState('');
   
   // Recent chats
   const [recentChats, setRecentChats] = useState([]);
@@ -407,25 +408,62 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
                 {/* Chat Input */}
                 <div className="relative border-t bg-white shrink-0 p-2">
                   {showVocabPicker && (
-                    <div className="absolute bottom-full left-0 right-0 bg-white border border-gray-100 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] rounded-t-2xl max-h-48 overflow-y-auto p-2 z-10 flex flex-col gap-1">
-                      <div className="flex justify-between items-center mb-1 px-2 py-1">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Chia sẻ từ đã lưu</span>
-                        <button onClick={() => setShowVocabPicker(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
-                          <X className="w-3 h-3" />
+                    <div className="absolute bottom-full left-0 right-0 bg-white border border-gray-100 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] rounded-t-2xl max-h-64 flex flex-col z-10">
+                      <div className="flex justify-between items-center p-2 border-b border-gray-50">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-2">Chia sẻ từ đã lưu</span>
+                        <button onClick={() => { setShowVocabPicker(false); setVocabSearchQuery(''); }} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
-                      {favorites.length > 0 ? favorites.map((f, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => handleSendVocab(f)}
-                          className="text-left px-3 py-2 text-sm hover:bg-gray-100 rounded-xl transition-colors truncate"
-                        >
-                          <span className="font-semibold text-gray-800">{typeof f === 'string' ? f : f.word}</span>
-                          {typeof f === 'object' && f.meaning && <span className="text-gray-500 text-xs ml-2 truncate">- {f.meaning}</span>}
-                        </button>
-                      )) : (
-                        <p className="text-xs text-center text-gray-400 p-2">Chưa có từ nào trong Sổ tay</p>
-                      )}
+                      <div className="p-2 border-b border-gray-50">
+                        <div className="relative">
+                          <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input 
+                            type="text" 
+                            placeholder="Tìm từ vựng..." 
+                            value={vocabSearchQuery}
+                            onChange={(e) => setVocabSearchQuery(e.target.value)}
+                            className="w-full bg-gray-50 rounded-lg py-1.5 pl-7 pr-2 text-xs outline-none focus:ring-1 focus:ring-gray-300 transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div className="overflow-y-auto flex-1 p-2 flex flex-col gap-1">
+                        {(() => {
+                          const reversed = [...favorites].reverse();
+                          const isSearching = vocabSearchQuery.trim() !== '';
+                          const filtered = isSearching 
+                            ? reversed.filter(f => {
+                                const w = typeof f === 'string' ? f : f.word;
+                                return w.toLowerCase().includes(vocabSearchQuery.toLowerCase());
+                              })
+                            : reversed.slice(0, 4);
+
+                          if (favorites.length === 0) {
+                            return <p className="text-xs text-center text-gray-400 p-2">Chưa có từ nào trong Sổ tay</p>;
+                          }
+                          if (filtered.length === 0) {
+                            return <p className="text-xs text-center text-gray-400 p-2">Không tìm thấy từ nào</p>;
+                          }
+                          
+                          return (
+                            <>
+                              {filtered.map((f, i) => (
+                                <button 
+                                  key={i} 
+                                  onClick={() => handleSendVocab(f)}
+                                  className="text-left px-3 py-2 text-sm hover:bg-gray-100 rounded-xl transition-colors truncate"
+                                >
+                                  <span className="font-semibold text-gray-800">{typeof f === 'string' ? f : f.word}</span>
+                                  {typeof f === 'object' && f.meaning && <span className="text-gray-500 text-xs ml-2 truncate">- {f.meaning}</span>}
+                                </button>
+                              ))}
+                              {!isSearching && favorites.length > 4 && (
+                                <p className="text-[10px] text-center text-gray-400 mt-1">Tìm kiếm để xem thêm...</p>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
                     </div>
                   )}
                   <form onSubmit={handleSendMessage} className="flex gap-2">
