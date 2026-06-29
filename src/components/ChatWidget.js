@@ -22,7 +22,53 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [showVocabPicker, setShowVocabPicker] = useState(false);
   
+  // Recent chats
+  const [recentChats, setRecentChats] = useState([]);
+  const [isLoadingRecent, setIsLoadingRecent] = useState(false);
+  
   const messagesEndRef = useRef(null);
+
+  // Load recent chats
+  useEffect(() => {
+    if (!isOpen || viewState !== 'list' || !supabase || !user || searchQuery.trim() !== '') return;
+    
+    const loadRecentChats = async () => {
+      setIsLoadingRecent(true);
+      const { data: recentMsgs, error } = await supabase
+        .from('messages')
+        .select('sender_id, receiver_id')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false })
+        .limit(100);
+        
+      if (!error && recentMsgs) {
+        const uniqueUserIds = new Set();
+        recentMsgs.forEach(msg => {
+          if (msg.sender_id !== user.id) uniqueUserIds.add(msg.sender_id);
+          if (msg.receiver_id !== user.id) uniqueUserIds.add(msg.receiver_id);
+        });
+        
+        const chatUserIds = Array.from(uniqueUserIds);
+        
+        if (chatUserIds.length > 0) {
+          const { data: usersData } = await supabase
+            .from('chat_users_view')
+            .select('*')
+            .in('id', chatUserIds);
+            
+          if (usersData) {
+            usersData.sort((a, b) => chatUserIds.indexOf(a.id) - chatUserIds.indexOf(b.id));
+            setRecentChats(usersData);
+          }
+        } else {
+          setRecentChats([]);
+        }
+      }
+      setIsLoadingRecent(false);
+    };
+    
+    loadRecentChats();
+  }, [isOpen, viewState, user, supabase, searchQuery]);
 
   // Subscribe to incoming messages
   useEffect(() => {
@@ -294,10 +340,30 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
                     ) : (
                       <p className="text-center p-8 text-sm text-gray-500">Không tìm thấy ai</p>
                     )
+                  ) : isLoadingRecent ? (
+                    <div className="flex justify-center p-8 text-gray-400">
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    </div>
+                  ) : recentChats.length > 0 ? (
+                    recentChats.map(u => (
+                      <button 
+                        key={u.id}
+                        onClick={() => openChatWithUser(u)}
+                        className="w-full flex items-center gap-3 p-3 hover:bg-white rounded-xl transition-colors text-left"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize">
+                          {u.display_name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div className="flex-1 truncate">
+                          <h4 className="font-semibold text-sm text-gray-900 truncate capitalize">{u.display_name}</h4>
+                          <p className="text-xs text-gray-500">Nhấn để nhắn tin</p>
+                        </div>
+                      </button>
+                    ))
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8 text-center space-y-3">
                       <MessageCircle className="w-12 h-12 opacity-20" />
-                      <p className="text-sm">Tìm kiếm tên bạn bè để bắt đầu trò chuyện</p>
+                      <p className="text-sm">Chưa có cuộc trò chuyện nào.<br/>Tìm kiếm tên bạn bè để bắt đầu!</p>
                     </div>
                   )}
                 </div>
