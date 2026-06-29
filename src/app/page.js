@@ -1613,19 +1613,18 @@ export default function App() {
     
     setAllData(prev => ({ ...prev, completed: updatedCompleted, tasks: updatedAllTasks }));
 
-    await supabase.from('user_progress').upsert({
-      id: user.id,
-      xp: newXp !== undefined ? newXp : xp,
-      streak: finalStreak,
-      completed_days: updatedCompleted,
-      day_tasks: updatedAllTasks,
-      favorites: newFavs !== undefined ? newFavs : favorites,
-      ai_scenarios: newScenarios !== undefined ? newScenarios : aiScenarios,
-      ai_lessons: newAiLessons !== undefined ? newAiLessons : aiLessons,
-      avatar_url: newAvatarUrl !== undefined ? newAvatarUrl : avatarUrl,
-      display_name: newDisplayName !== undefined ? newDisplayName : displayName,
-      last_active_date: todayStr,
-    });
+    const updateData = { last_active_date: todayStr };
+    if (newXp !== undefined) updateData.xp = newXp;
+    if (newStreak !== undefined || finalStreak !== streak) updateData.streak = finalStreak;
+    if (newCompleted !== undefined) updateData.completed_days = updatedCompleted;
+    if (newDayTasks !== undefined || newPerformanceStats !== undefined || newCareerTrack !== undefined) updateData.day_tasks = updatedAllTasks;
+    if (newFavs !== undefined) updateData.favorites = newFavs;
+    if (newScenarios !== undefined) updateData.ai_scenarios = newScenarios;
+    if (newAiLessons !== undefined) updateData.ai_lessons = newAiLessons;
+    if (newAvatarUrl !== undefined) updateData.avatar_url = newAvatarUrl;
+    if (newDisplayName !== undefined) updateData.display_name = newDisplayName;
+
+    await supabase.from('user_progress').update(updateData).eq('id', user.id);
   };
 
   useEffect(() => {
