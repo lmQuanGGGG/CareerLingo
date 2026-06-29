@@ -3,6 +3,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Search, Send, ArrowLeft, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 
+function formatMessageTime(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  if (isToday) {
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
+  if (isYesterday) {
+    return 'Hôm qua';
+  }
+  
+  const diffTime = Math.abs(now - date);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  if (diffDays <= 7) {
+    const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+    return days[date.getDay()];
+  }
+  
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
 export default function ChatWidget({ user, supabase, favorites = [], toggleFavorite, isFavorite }) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -566,7 +593,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                             <h4 className={`text-sm truncate capitalize ${!u.is_sender && u.is_read === false ? 'font-extrabold text-[#1D1D1F]' : 'font-semibold text-gray-900'}`}>{u.display_name}</h4>
                             {u.created_at && (
                               <span className="text-[10px] text-gray-400 shrink-0 ml-2">
-                                {new Date(u.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}
+                                {formatMessageTime(u.created_at)}
                               </span>
                             )}
                           </div>
