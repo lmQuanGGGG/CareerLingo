@@ -2670,13 +2670,28 @@ export default function App() {
                     />
                     <div className="flex justify-between items-center mt-2 sm:mt-4">
                       <p className="text-[10px] sm:text-xs text-gray-400 font-medium">Bấm Enter để dịch</p>
-                      <button 
-                        type="submit"
-                        disabled={isLookingUpDict || !dictSearchQuery.trim()}
-                        className="bg-[#0071E3] text-white p-2 sm:p-3 rounded-xl sm:rounded-2xl hover:bg-blue-600 transition-colors disabled:opacity-50"
-                      >
-                        {isLookingUpDict ? <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4 sm:w-6 sm:h-6" />}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {dictSearchQuery && (
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setDictSearchQuery('');
+                              setDictResult(null);
+                            }}
+                            className="bg-gray-100 text-gray-500 p-2 sm:p-3 rounded-xl sm:rounded-2xl hover:bg-gray-200 transition-colors"
+                            title="Xóa tìm kiếm"
+                          >
+                            <X className="w-4 h-4 sm:w-6 sm:h-6" />
+                          </button>
+                        )}
+                        <button 
+                          type="submit"
+                          disabled={isLookingUpDict || !dictSearchQuery.trim()}
+                          className="bg-[#0071E3] text-white p-2 sm:p-3 rounded-xl sm:rounded-2xl hover:bg-blue-600 transition-colors disabled:opacity-50"
+                        >
+                          {isLookingUpDict ? <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4 sm:w-6 sm:h-6" />}
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>
