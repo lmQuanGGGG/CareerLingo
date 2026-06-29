@@ -78,6 +78,9 @@ create table public.messages (
 -- Bật Row Level Security cho bảng messages
 alter table public.messages enable row level security;
 
+-- Bật Realtime cho bảng messages để chat được cập nhật trực tiếp
+alter publication supabase_realtime add table public.messages;
+
 -- Cho phép người gửi tạo tin nhắn
 create policy "Users can send messages"
   on messages for insert
