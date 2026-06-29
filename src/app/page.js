@@ -999,9 +999,9 @@ export default function App() {
           let didUpdateStreak = false;
 
           if (!lastDateStr) {
-             // First time
+             // First time logging date (or recovering from crash bug)
              lastDateStr = todayStr;
-             currentStreak = 0;
+             currentStreak = (data.completed_days && data.completed_days.length > 0) ? 1 : 0;
              didUpdateStreak = true;
           } else if (lastDateStr !== todayStr) {
              const lastDate = new Date(lastDateStr);
@@ -1025,6 +1025,10 @@ export default function App() {
                    lastDateStr = todayStr;
                    didUpdateStreak = true;
                    setStreakMessage({ type: 'saved', missedDays, cost });
+                   sendLocalNotification('Chuỗi học tập đã được cứu! 🛡️', {
+                     body: `Hệ thống đã dùng XP để bảo vệ Streak của bạn sau khi bạn bỏ lỡ ${missedDays} ngày.`,
+                     tag: 'streak-saved'
+                   });
                 } else {
                    // Streak lost
                    currentStreak = 1;
@@ -1046,10 +1050,6 @@ export default function App() {
           if (data.avatar_url) setAvatarUrl(data.avatar_url);
 
           if (didUpdateStreak) {
-            sendLocalNotification('Chuỗi học tập đã được cứu! 🛡️', {
-              body: `Hệ thống đã dùng XP để bảo vệ Streak của bạn sau khi bạn bỏ lỡ ${missedDays} ngày.`,
-              tag: 'streak-saved'
-            });
             await supabase.from('user_progress').upsert({
               id: user.id,
               xp: currentXp,
@@ -1105,16 +1105,26 @@ export default function App() {
 
   const syncProgress = async (newXp, newStreak, newCompleted, newFavs, newScenarios, newAiLessons, newAvatarUrl, newDayTasks) => {
     if (!user) return;
+    const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    
+    // Auto-start streak if they were at 0 and completed a lesson
+    let finalStreak = newStreak !== undefined ? newStreak : streak;
+    if (finalStreak === 0 && newCompleted !== undefined && newCompleted.length > completedDays.length) {
+      finalStreak = 1;
+      setStreak(1);
+    }
+
     await supabase.from('user_progress').upsert({
       id: user.id,
       xp: newXp !== undefined ? newXp : xp,
-      streak: newStreak !== undefined ? newStreak : streak,
+      streak: finalStreak,
       completed_days: newCompleted !== undefined ? newCompleted : completedDays,
       day_tasks: newDayTasks !== undefined ? newDayTasks : dayTasks,
       favorites: newFavs !== undefined ? newFavs : favorites,
       ai_scenarios: newScenarios !== undefined ? newScenarios : aiScenarios,
       ai_lessons: newAiLessons !== undefined ? newAiLessons : aiLessons,
       avatar_url: newAvatarUrl !== undefined ? newAvatarUrl : avatarUrl,
+      last_active_date: todayStr,
     });
   };
 
