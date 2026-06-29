@@ -692,7 +692,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
           setIsOpen(!isOpen);
           if (!isOpen) setUnreadCount(0); // clear unread on open
         }}
-        className="w-14 h-14 bg-[#1D1D1F] hover:bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 relative"
+        className="w-14 h-14 bg-[#1D1D1F] hover:bg-black text-white rounded-full shadow-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 relative pointer-events-auto"
       >
         <MessageCircle className="w-6 h-6" />
         {unreadCount > 0 && !isOpen && (
