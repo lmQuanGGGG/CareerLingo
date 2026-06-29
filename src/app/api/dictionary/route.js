@@ -20,7 +20,7 @@ Cấu trúc JSON bắt buộc:
 {
   "word": "từ/cụm từ gốc tiếng Anh (nếu người dùng nhập tiếng Anh) HOẶC từ/cụm từ dịch sang tiếng Anh (nếu người dùng nhập tiếng Việt)",
   "ipa": "phiên âm quốc tế IPA của từ tiếng Anh",
-  "meaning": "nghĩa tiếng Việt (nếu nhập Anh) hoặc nghĩa tiếng Anh chi tiết (nếu nhập Việt), bao gồm loại từ",
+  "meaning": "nghĩa tiếng Việt của từ (bao gồm loại từ và giải thích ngắn gọn). PHẢI luôn có từ tiếng Việt tương đương ở đầu (ví dụ: 'đói (adj): ...' hoặc 'kỹ sư (n): ...')",
   "examples": ["ví dụ song ngữ 1 (Anh - Việt)", "ví dụ song ngữ 2 (Anh - Việt)"]
 }`;
     const userQuery = `Tra từ này: "${word}"`;
