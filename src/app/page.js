@@ -1786,19 +1786,23 @@ export default function App() {
 
   const toggleFavorite = (item) => {
     const wordKey = typeof item === 'string' ? item : item.word;
-    let updated;
-    const exists = favorites.some(f => (typeof f === 'string' ? f : f.word) === wordKey);
     
-    if (exists) {
-      updated = favorites.filter(f => (typeof f === 'string' ? f : f.word) !== wordKey);
-    } else {
-      updated = [...favorites, item];
-    }
-    setFavorites(updated);
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
-    if (user) {
-      syncProgress(undefined, undefined, undefined, updated);
-    }
+    setFavorites(prev => {
+      let updated;
+      const exists = prev.some(f => (typeof f === 'string' ? f : f.word) === wordKey);
+      
+      if (exists) {
+        updated = prev.filter(f => (typeof f === 'string' ? f : f.word) !== wordKey);
+      } else {
+        updated = [...prev, item];
+      }
+      
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
+      if (user) {
+        syncProgress(undefined, undefined, undefined, updated);
+      }
+      return updated;
+    });
   };
 
   const isFavorite = (word) => favorites.some(f => (typeof f === 'string' ? f : f.word) === word);
