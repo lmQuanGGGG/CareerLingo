@@ -155,16 +155,19 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
     const meaning = typeof vocabObj === 'object' ? (vocabObj.meaning || vocabObj.mean) : '';
     const ipa = typeof vocabObj === 'object' ? vocabObj.ipa : '';
     
-    let formattedMsg = `📚 Từ vựng: ${wordKey}`;
-    if (ipa) formattedMsg += `\n🗣️ ${ipa}`;
-    if (meaning) formattedMsg += `\n📖 ${meaning}`;
+    const contentObj = {
+      type: 'vocab_card',
+      word: wordKey,
+      ipa: ipa,
+      meaning: meaning
+    };
+    const finalFormattedMsg = `[VOCAB_CARD]${JSON.stringify(contentObj)}`;
     
-    // Optimistic append
     const tempMsg = {
       id: 'temp-' + Date.now(),
       sender_id: user.id,
       receiver_id: activeChatUser.id,
-      content: formattedMsg,
+      content: finalFormattedMsg,
       created_at: new Date().toISOString()
     };
     setMessages(prev => [...prev, tempMsg]);
@@ -176,7 +179,7 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
       .insert({
         sender_id: user.id,
         receiver_id: activeChatUser.id,
-        content: formattedMsg
+        content: finalFormattedMsg
       })
       .select()
       .single();
@@ -190,6 +193,26 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
     setActiveChatUser(chatUser);
     setViewState('room');
     setSearchQuery('');
+  };
+
+  const renderMessageContent = (msg, isMe) => {
+    if (msg.content.startsWith('[VOCAB_CARD]')) {
+      try {
+        const data = JSON.parse(msg.content.replace('[VOCAB_CARD]', ''));
+        return (
+          <div className={`flex flex-col gap-1 p-2 rounded-xl mt-1 ${isMe ? 'bg-white/10' : 'bg-gray-50 border border-gray-100'}`}>
+            <div className="flex items-center gap-2">
+              <span className={`font-bold text-base ${isMe ? 'text-white' : 'text-[#1D1D1F]'}`}>{data.word}</span>
+              {data.ipa && <span className={`text-xs ${isMe ? 'text-gray-300' : 'text-gray-500'}`}>{data.ipa}</span>}
+            </div>
+            {data.meaning && <span className={`text-sm ${isMe ? 'text-gray-200' : 'text-gray-600'}`}>{data.meaning}</span>}
+          </div>
+        );
+      } catch (e) {
+        return msg.content;
+      }
+    }
+    return msg.content;
   };
 
   if (!user) return null; // Don't show chat if not logged in
@@ -294,10 +317,19 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
                   ) : (
                     messages.map((msg, idx) => {
                       const isMe = msg.sender_id === user.id;
+                      const timeString = new Date(msg.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
                       return (
-                        <div key={msg.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-[#1D1D1F] text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'}`}>
-                            {msg.content}
+                        <div key={msg.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-2`}>
+                          {!isMe && (
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-800 font-bold shrink-0 capitalize mr-2 mt-auto">
+                              {activeChatUser?.display_name?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                          )}
+                          <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                            <div className={`rounded-2xl px-4 py-2 text-sm ${isMe ? 'bg-[#1D1D1F] text-white rounded-tr-sm' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'}`}>
+                              {renderMessageContent(msg, isMe)}
+                            </div>
+                            <span className="text-[10px] text-gray-400 mt-1">{timeString}</span>
                           </div>
                         </div>
                       );
