@@ -7,7 +7,7 @@ import {
   Flame, Globe, HelpCircle, History, Info, Key, Languages, Layers, Repeat,
   MapPin, MessageCircle, MessageSquare, Mic, MicOff, Music, Play, Pause, Square, RotateCcw, 
   Search, ShieldAlert, Star, Trophy, Volume2, VolumeX, User, 
-  Sparkles, Check, X, AlertCircle, Bookmark, BookmarkCheck, ChevronLeft, LogOut, ChevronDown, Smile, Lock, MoreHorizontal
+  Sparkles, Check, X, AlertCircle, Bookmark, BookmarkCheck, ChevronLeft, LogOut, ChevronDown, Smile, Lock, MoreHorizontal, Bell, BellOff
 } from 'lucide-react';
 
 const COMPLETED_DAYS_KEY = 'hotel_english_completed_days';
@@ -757,14 +757,7 @@ const { LESSONS_DATA, VOCABULARY_BANK } = (() => {
       
       const optionsEn = [v.word, vocab[(i * 2 + 1) % 20].word, vocab[(i * 2 + 3) % 20].word, vocab[(i * 2 + 5) % 20].word].sort((a, b) => a.localeCompare(b));
       const optionsVn = [v.mean, vocab[(i * 2 + 1) % 20].mean, vocab[(i * 2 + 3) % 20].mean, vocab[(i * 2 + 5) % 20].mean].sort((a, b) => a.localeCompare(b));
-      
-      if (i % 3 === 0) {
-        quiz.push({ q: `Đâu là ý nghĩa chuẩn nhất của từ '${v.word}'?`, a: v.mean, options: optionsVn });
-      } else if (i % 3 === 1) {
-        quiz.push({ q: `Từ tiếng Anh nào có nghĩa là "${v.mean}"?`, a: v.word, options: optionsEn });
-      } else {
-        quiz.push({ q: `Chọn từ thích hợp: 'Please ensure the ______ process strictly follows our 5-star standard.'`, a: v.word, options: optionsEn });
-      }
+      quiz.push({ q: `Từ vựng tiếng Anh cho nghĩa "${v.mean}" là gì?`, a: v.word });
     }
 
     lData[day] = { vocab, dialogue, listening, speaking, quiz };
@@ -845,6 +838,19 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const [leaderboardUsers, setLeaderboardUsers] = useState([]);
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
@@ -852,9 +858,12 @@ export default function App() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [streakMessage, setStreakMessage] = useState(null);
+  const [showDayCompleteAnimation, setShowDayCompleteAnimation] = useState(null);
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMobileMore, setShowMobileMore] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const [completedDays, setCompletedDays] = useState([]);
   const [dayTasks, setDayTasks] = useState({});
   const [quizInputs, setQuizInputs] = useState({});
@@ -880,6 +889,83 @@ export default function App() {
   const [customScenarioPrompt, setCustomScenarioPrompt] = useState("");
   const [isGeneratingScenario, setIsGeneratingScenario] = useState(false);
   const [aiScenarios, setAiScenarios] = useState([]);
+
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [lastActiveDate, setLastActiveDate] = useState(null);
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        setNotificationsEnabled(true);
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            setNotificationsEnabled(true);
+          }
+        });
+      }
+    }
+  }, []);
+
+  const sendLocalNotification = (title, options) => {
+    if ('Notification' in window && Notification.permission === 'granted' && notificationsEnabled) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(title, {
+            icon: '/icon.png',
+            badge: '/icon.png',
+            vibrate: [200, 100, 200],
+            ...options
+          });
+        });
+      } else {
+        new Notification(title, {
+          icon: '/icon.png',
+          ...options
+        });
+      }
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const hour = now.getHours();
+      
+      // Notify after 20:00 if they haven't learned today
+      if (hour >= 20) {
+        const today = now.toISOString().split('T')[0];
+        // If lastActiveDate is today, they already learned.
+        if (lastActiveDate === today) return;
+
+        const lastNotifiedStr = localStorage.getItem('last_reminder_time');
+        let shouldNotify = false;
+        
+        if (!lastNotifiedStr) {
+          shouldNotify = true;
+        } else {
+          const lastNotified = new Date(lastNotifiedStr);
+          // Check if the last notification was on a different day OR more than 1 hour ago
+          if (
+            lastNotified.toISOString().split('T')[0] !== today ||
+            now.getTime() - lastNotified.getTime() >= 60 * 60 * 1000 // 1 hour
+          ) {
+            shouldNotify = true;
+          }
+        }
+        
+        if (shouldNotify) {
+          sendLocalNotification('Đến giờ học rồi! 🦉', {
+            body: 'Chuỗi học tập (streak) của bạn sẽ biến mất nếu bạn không hoàn thành bài học hôm nay. Vào học ngay!',
+            tag: 'study-reminder'
+          });
+          localStorage.setItem('last_reminder_time', now.toISOString());
+        }
+      }
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
+  }, [notificationsEnabled, lastActiveDate]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -956,9 +1042,14 @@ export default function App() {
           setFavorites(data.favorites || []);
           setAiScenarios(data.ai_scenarios || []);
           setAiLessons(data.ai_lessons || {});
+          setLastActiveDate(lastDateStr);
           if (data.avatar_url) setAvatarUrl(data.avatar_url);
 
           if (didUpdateStreak) {
+            sendLocalNotification('Chuỗi học tập đã được cứu! 🛡️', {
+              body: `Hệ thống đã dùng XP để bảo vệ Streak của bạn sau khi bạn bỏ lỡ ${missedDays} ngày.`,
+              tag: 'streak-saved'
+            });
             await supabase.from('user_progress').upsert({
               id: user.id,
               xp: currentXp,
@@ -1003,6 +1094,7 @@ export default function App() {
             const newCompleted = [...completedDays, selectedDayId];
             setCompletedDays(newCompleted);
             syncProgress(undefined, undefined, newCompleted, undefined, undefined, undefined, undefined, newTasks);
+            setShowDayCompleteAnimation(selectedDayId);
           } else {
             syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, newTasks);
           }
@@ -1133,6 +1225,28 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Hide nav when scrolling down past 50px, show when scrolling up
+      if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+        setIsNavVisible(false);
+        // Also close the "more" menu if it's open
+        if (showMobileMore) {
+          setShowMobileMore(false);
+        }
+      } else {
+        setIsNavVisible(true);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showMobileMore]);
+
   const addXp = (amount) => {
     const newXp = xp + amount;
     setXp(newXp);
@@ -1145,6 +1259,7 @@ export default function App() {
       setCompletedDays(updated);
       localStorage.setItem(COMPLETED_DAYS_KEY, JSON.stringify(updated));
       addXp(100);
+      setShowDayCompleteAnimation(dayId);
     }
   };
 
@@ -1369,6 +1484,7 @@ export default function App() {
               const newCompleted = [...completedDays, selectedDayId];
               setCompletedDays(newCompleted);
               syncProgress(undefined, undefined, newCompleted, undefined, undefined, undefined, undefined, newTasks);
+              setShowDayCompleteAnimation(selectedDayId);
             } else {
               syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, newTasks);
             }
@@ -1679,21 +1795,23 @@ export default function App() {
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
-          <div className="flex items-center gap-1 sm:gap-2 bg-[#F5F5F7] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-gray-200">
-            <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500 fill-orange-500" />
-            <span className="text-xs sm:text-sm font-semibold text-[#1D1D1F]">{streak} <span className="hidden sm:inline">days</span></span>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2 bg-[#F5F5F7] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-gray-200">
-            <Star className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400 fill-amber-400" />
-            <span className="text-xs sm:text-sm font-semibold text-[#1D1D1F]">{xp} <span className="hidden sm:inline">XP</span></span>
-          </div>
-          <div className="hidden md:flex items-center gap-2 text-xs text-[#0071E3] font-medium mr-2">
-            <Award className="w-4 h-4" />
-            <span>Premium Access</span>
+        <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
+          <div className="hidden sm:flex items-center gap-2 sm:gap-4 lg:gap-6">
+            <div className="flex items-center gap-1 sm:gap-2 bg-[#F5F5F7] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-gray-200">
+              <Flame className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500 fill-orange-500" />
+              <span className="text-xs sm:text-sm font-semibold text-[#1D1D1F]">{streak} <span className="hidden sm:inline">days</span></span>
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 bg-[#F5F5F7] px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-gray-200">
+              <Star className="w-3 h-3 sm:w-4 sm:h-4 text-amber-400 fill-amber-400" />
+              <span className="text-xs sm:text-sm font-semibold text-[#1D1D1F]">{xp} <span className="hidden sm:inline">XP</span></span>
+            </div>
+            <div className="hidden md:flex items-center gap-2 text-xs text-[#0071E3] font-medium mr-2">
+              <Award className="w-4 h-4" />
+              <span>Premium Access</span>
+            </div>
           </div>
 
-          <div className="relative">
+          <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-1 sm:gap-2 bg-gray-100 hover:bg-gray-200 transition-colors px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-gray-200"
@@ -1717,6 +1835,16 @@ export default function App() {
                   </p>
                 </div>
                 <div className="p-2 border-b border-gray-100">
+                  <button
+                    onClick={() => {
+                      setActiveTab('profile');
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-[#1D1D1F] font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-[#1D1D1F]" />
+                    Hồ sơ của tôi
+                  </button>
                   <button
                     onClick={() => {
                       setShowAvatarModal(true);
@@ -1975,6 +2103,15 @@ export default function App() {
                           key={day.id} 
                           onClick={() => {
                             if (!isLocked) {
+                              if (selectedDayId !== day.id) {
+                                const tasks = dayTasks[day.id] || {};
+                                const order = ['vocab', 'dialogue', 'listening', 'speaking', 'quiz'];
+                                const resumeTab = order.find(t => !tasks[t]) || 'vocab';
+                                setLessonActiveSubTab(resumeTab);
+                                // Also clear quiz state when switching days to prevent answers from leaking
+                                setQuizAnswers({});
+                                setQuizInputs({});
+                              }
                               setSelectedDayId(day.id);
                               setActiveTab('lesson');
                             }
@@ -2314,6 +2451,10 @@ export default function App() {
                     <div className="flex gap-4 max-w-lg">
                       <input 
                         type="text"
+                        lang="en"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
                         value={listeningBlankInput}
                         onChange={(e) => setListeningBlankInput(e.target.value)}
                         placeholder="Type the word..."
@@ -2527,6 +2668,10 @@ export default function App() {
                               <>
                                 <input
                                   type="text"
+                                  lang="en"
+                                  autoCapitalize="none"
+                                  autoCorrect="off"
+                                  spellCheck="false"
                                   disabled={isAnswered}
                                   value={quizInputs[qidx] || ''}
                                   onChange={(e) => setQuizInputs(prev => ({...prev, [qidx]: e.target.value}))}
@@ -2737,23 +2882,45 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'vocabulary' && (
+          {(activeTab === 'vocabulary' || activeTab === 'flashcards') && (
             <div className="space-y-8 animate-fadeIn">
               
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
                 <div>
                   <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-[#1D1D1F] flex items-center gap-3">
                     <Languages className="text-[#0071E3] w-8 h-8" />
-                    Vocab Vault
+                    Vocab & Cards
                   </h2>
-                  <p className="text-lg text-[#6E6E73] font-medium mt-2">600 curated terms for luxury hotel professionals.</p>
+                  <p className="text-lg text-[#6E6E73] font-medium mt-2">600 curated terms and interactive flashcards.</p>
+                </div>
+
+                <div className="flex bg-[#F5F5F7] p-1 rounded-2xl border border-gray-200 self-start md:self-auto">
+                  <button 
+                    onClick={() => setActiveTab('vocabulary')}
+                    className={`flex-1 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'vocabulary' ? 'bg-white text-[#1D1D1F] shadow-sm' : 'text-[#6E6E73] hover:text-[#1D1D1F]'}`}
+                  >
+                    List View
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('flashcards')}
+                    className={`flex-1 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'flashcards' ? 'bg-white text-[#1D1D1F] shadow-sm' : 'text-[#6E6E73] hover:text-[#1D1D1F]'}`}
+                  >
+                    Flashcards
+                  </button>
                 </div>
               </div>
+
+              {activeTab === 'vocabulary' && (
+                <>
 
               <div className="bg-[#FFFFFF]/90 border border-gray-100 p-6 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="relative w-full md:w-96">
                   <input 
                     type="text"
+                    lang="en"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
                     value={vocabSearch}
                     onChange={(e) => setVocabSearch(e.target.value)}
                     placeholder="Search word or meaning..."
@@ -2817,25 +2984,20 @@ export default function App() {
                   ))}
               </div>
 
-            </div>
-          )}
+                </>
+              )}
 
-          {activeTab === 'flashcards' && (
-            <div className="space-y-8 animate-fadeIn">
-              
-              <div className="text-center max-w-lg mx-auto space-y-3 px-2">
-                <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-[#1D1D1F]">Smart Flashcards</h2>
-                <p className="text-lg text-[#6E6E73] font-medium">Master {VOCABULARY_BANK.length} words with interactive quizzes.</p>
-                <div className="pt-4">
-                  <button 
-                    onClick={() => startSmartFlashcards(true)}
-                    className="inline-flex justify-center items-center gap-2 bg-[#FF9500] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#d97c00] transition-all shadow-md hover:-translate-y-0.5"
-                  >
-                    <Repeat className="w-4 h-4" />
-                    Trộn Ngẫu Nhiên Toàn Bộ
-                  </button>
-                </div>
-              </div>
+              {activeTab === 'flashcards' && (
+                <>
+                  <div className="text-center max-w-lg mx-auto space-y-3 px-2 mt-4">
+                    <button 
+                      onClick={() => startSmartFlashcards(true)}
+                      className="inline-flex justify-center items-center gap-2 bg-[#FF9500] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#d97c00] transition-all shadow-md hover:-translate-y-0.5"
+                    >
+                      <Repeat className="w-4 h-4" />
+                      Trộn Ngẫu Nhiên Toàn Bộ
+                    </button>
+                  </div>
 
               {shuffledFlashcards.length > 0 && currentFlashcardOptions.length > 0 && (
                 <div className="flex flex-col items-center justify-center space-y-8 py-4">
@@ -2903,43 +3065,44 @@ export default function App() {
                   </div>
                 </div>
               )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
+        )}
 
           {activeTab === 'roleplay' && (
             <div className="space-y-8 animate-fadeIn">
               
-              <div className="bg-gradient-to-br from-[#0071E3] to-indigo-600 border border-transparent p-5 sm:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-3xl lg:rounded-[2.5rem] relative overflow-hidden shadow-lg">
-                <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-5 sm:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-3xl lg:rounded-[2.5rem] relative shadow-sm">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
                   <div>
-                    <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3 mb-2">
-                      <Sparkles className="text-amber-300 w-8 h-8" />
+                    <h2 className="text-3xl font-bold text-[#1D1D1F] tracking-tight flex items-center gap-3 mb-2">
+                      <Sparkles className="text-blue-500 w-8 h-8" />
                       Live AI Role Play
                     </h2>
-                    <p className="text-base text-blue-100 font-medium">Powered by advanced AI. Talk to a virtual hotel guest in real-time.</p>
+                    <p className="text-base text-[#6E6E73] font-medium">Powered by advanced AI. Talk to a virtual hotel guest in real-time.</p>
                   </div>
                   
                   <div className="flex gap-3">
                     <button 
                       onClick={() => setRoleplaySpeechEnabled(!roleplaySpeechEnabled)}
-                      className={`p-3 rounded-xl transition-all ${roleplaySpeechEnabled ? 'bg-white text-[#0071E3] shadow-md' : 'bg-blue-800/50 text-blue-200'}`}
+                      className={`p-3 rounded-xl transition-all ${roleplaySpeechEnabled ? 'bg-white text-[#0071E3] shadow-sm border border-blue-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                       title={roleplaySpeechEnabled ? "Auto-speak ON" : "Auto-speak OFF"}
                     >
                       {roleplaySpeechEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
                     </button>
                     <button 
                       onClick={() => handleResetRoleplay(roleplayPersona, roleplayDifficulty)}
-                      className="bg-blue-800/50 hover:bg-blue-800 text-white p-3 rounded-xl text-sm font-bold transition-all"
+                      className="bg-[#1D1D1F] hover:bg-[#333336] text-white p-3 rounded-xl text-sm font-bold transition-all shadow-md"
                     >
                       Reset Chat
                     </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t border-blue-400/30 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t border-blue-100 relative z-10">
                   <div className="space-y-3">
-                    <label className="text-[11px] font-bold uppercase tracking-widest text-blue-200">Guest Persona</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-[#6E6E73]">Guest Persona</label>
                     <div className="flex flex-wrap gap-2">
                       {['Khách VIP khó tính', 'Khách du lịch', 'Khách doanh nhân'].map((p) => (
                         <button
@@ -2948,7 +3111,7 @@ export default function App() {
                             setRoleplayPersona(p);
                             handleResetRoleplay(p, roleplayDifficulty);
                           }}
-                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${roleplayPersona === p ? 'bg-white text-[#0071E3] shadow-md' : 'bg-blue-800/40 text-blue-100 hover:bg-blue-800/60'}`}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${roleplayPersona === p ? 'bg-white text-[#0071E3] shadow-sm border border-blue-200' : 'bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-gray-200'}`}
                         >
                           {p}
                         </button>
@@ -2957,7 +3120,7 @@ export default function App() {
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[11px] font-bold uppercase tracking-widest text-blue-200">Difficulty</label>
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-[#6E6E73]">Difficulty</label>
                     <div className="flex gap-2">
                       {['Easy', 'Medium', 'Hard'].map((d) => (
                         <button
@@ -2966,7 +3129,7 @@ export default function App() {
                             setRoleplayDifficulty(d);
                             handleResetRoleplay(roleplayPersona, d);
                           }}
-                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${roleplayDifficulty === d ? 'bg-white text-[#0071E3] shadow-md' : 'bg-blue-800/40 text-blue-100 hover:bg-blue-800/60'}`}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${roleplayDifficulty === d ? 'bg-white text-[#0071E3] shadow-sm border border-blue-200' : 'bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-gray-200'}`}
                         >
                           {d}
                         </button>
@@ -3033,6 +3196,10 @@ export default function App() {
                 <div className="pt-4 sm:pt-6 border-t border-gray-100 flex items-center gap-2 sm:gap-3 w-full">
                   <input
                     type="text"
+                    lang="en"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
                     value={roleplayInput}
                     onChange={(e) => setRoleplayInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -3280,7 +3447,30 @@ export default function App() {
               </div>
             </div>
             
-            <div className="mt-8 pt-6 border-t border-gray-100 w-full">
+            <div className="mt-8 pt-6 border-t border-gray-100 w-full flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  if (notificationsEnabled) {
+                    setNotificationsEnabled(false);
+                  } else {
+                    if ('Notification' in window) {
+                      Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') setNotificationsEnabled(true);
+                      });
+                    }
+                  }
+                }}
+                className={`w-full flex items-center justify-between px-5 py-4 font-bold rounded-2xl transition-colors ${notificationsEnabled ? 'bg-blue-50 text-[#0071E3]' : 'bg-gray-100 text-[#1D1D1F] hover:bg-gray-200'}`}
+              >
+                <div className="flex items-center gap-3">
+                  {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                  <span>Thông báo nhắc nhở</span>
+                </div>
+                <div className={`w-12 h-6 rounded-full p-1 transition-colors ${notificationsEnabled ? 'bg-[#0071E3]' : 'bg-gray-300'}`}>
+                  <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${notificationsEnabled ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                </div>
+              </button>
+              
               <button
                 onClick={async () => {
                   await supabase.auth.signOut();
@@ -3339,100 +3529,89 @@ export default function App() {
         </div>
       )}
 
-      {/* Mobile Floating Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-5 left-4 right-4 z-50">
-        {/* More popup menu */}
-        {showMobileMore && (
-          <div className="absolute bottom-[80px] left-0 right-0 mx-auto w-[calc(100%-0px)]">
-            <div className="bg-white/98 backdrop-blur-2xl border border-gray-200/60 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.2)] rounded-[1.5rem] p-3">
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'vocabulary', label: 'Vocabulary', Icon: BookOpen },
-                  { id: 'situations', label: 'Situations', Icon: Star },
-                  { id: 'leaderboard', label: 'Leaderboard', Icon: Trophy },
-                  { id: 'profile', label: 'Profile', Icon: User },
-                ].map(({ id, label, Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => { setActiveTab(id); setShowMobileMore(false); }}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all duration-200 ${
-                      activeTab === id
-                        ? 'bg-[#0071E3]/10 text-[#0071E3]'
-                        : 'text-[#86868B] hover:bg-gray-50 hover:text-[#1D1D1F]'
-                    }`}
-                  >
-                    <Icon className="w-6 h-6 mb-1.5" />
-                    <span className="text-[10px] font-semibold">{label}</span>
-                  </button>
-                ))}
+      {/* Day Complete Animation Modal */}
+      {showDayCompleteAnimation && (
+        <div className="fixed inset-0 bg-[#1D1D1F]/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-sm flex flex-col items-center justify-center">
+            {/* Fire icon with radiating rings */}
+            <div className="relative w-40 h-40 flex items-center justify-center mb-8">
+              <div className="absolute inset-0 bg-orange-500 rounded-full animate-ping opacity-20"></div>
+              <div className="absolute inset-2 bg-orange-400 rounded-full animate-ping opacity-40" style={{ animationDelay: '0.2s' }}></div>
+              <div className="relative z-10 w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/50 animate-bounce">
+                <Flame className="w-14 h-14 text-orange-500 fill-orange-500" />
               </div>
             </div>
+
+            <h2 className="text-4xl font-extrabold text-white mb-2 text-center drop-shadow-lg">
+              Ngày {showDayCompleteAnimation} Hoàn Thành!
+            </h2>
+            <p className="text-xl text-orange-200 font-bold mb-10 text-center drop-shadow-md">
+              Chuỗi học tập đã tăng lên!
+            </p>
+
+            <button
+              onClick={() => setShowDayCompleteAnimation(null)}
+              className="w-full bg-white text-orange-600 font-bold text-lg py-4 rounded-2xl shadow-[0_8px_0_0_#FFF7ED] active:shadow-[0_0_0_0_#FFF7ED] active:translate-y-2 transition-all"
+            >
+              TIẾP TỤC
+            </button>
           </div>
-        )}
-        {/* Backdrop to close More */}
-        {showMobileMore && (
-          <div className="fixed inset-0 z-[-1]" onClick={() => setShowMobileMore(false)} />
-        )}
-        <nav className="bg-white/95 backdrop-blur-xl border border-gray-200/50 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] rounded-[2rem] p-1.5">
-          <div className="flex justify-between items-center h-16 gap-1 px-1">
+        </div>
+      )}
+
+      {/* Mobile Floating Bottom Navigation */}
+      <div 
+        className={`lg:hidden fixed z-50 transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] origin-bottom flex justify-center ${
+          isNavVisible 
+            ? 'left-4 right-4 bottom-5 scale-100' 
+            : 'left-12 right-12 bottom-3 scale-[0.8]'
+        }`}
+      >
+        <div className="w-full">
+        {/* Mobile popup menu removed */}
+        <nav 
+          className="bg-white/5 backdrop-blur-sm border border-white/40 shadow-[0_8px_32px_rgb(0,0,0,0.1)] rounded-full p-1 mx-2"
+          style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}
+        >
+          <div className="flex justify-between items-center h-14 sm:h-16 px-2">
             <button
               onClick={() => { setActiveTab('dashboard'); setShowMobileMore(false); }}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'dashboard' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
+              className={`flex items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'dashboard' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
             >
-              <div className={`flex flex-col items-center justify-center ${activeTab === 'dashboard' ? 'scale-110' : ''} transition-transform`}>
-                <Calendar className={`w-[22px] h-[22px] mb-1 ${activeTab === 'dashboard' ? 'fill-[#0071E3]/10' : ''}`} />
-                <span className="text-[9px] font-bold tracking-wide">Home</span>
-              </div>
+              <Calendar className={`w-7 h-7 ${activeTab === 'dashboard' ? 'fill-[#0071E3]/20 scale-110' : 'scale-100'} transition-transform`} />
             </button>
             
             <button
-              onClick={() => { setActiveTab('syllabus'); setShowMobileMore(false); }}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'syllabus' || activeTab === 'lesson' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
-            >
-              <div className={`flex flex-col items-center justify-center ${activeTab === 'syllabus' || activeTab === 'lesson' ? 'scale-110' : ''} transition-transform`}>
-                <BookOpen className={`w-[22px] h-[22px] mb-1 ${activeTab === 'syllabus' || activeTab === 'lesson' ? 'fill-[#0071E3]/10' : ''}`} />
-                <span className="text-[9px] font-bold tracking-wide">Class</span>
-              </div>
-            </button>
-
-            <button
               onClick={() => { setActiveTab('roleplay'); setShowMobileMore(false); }}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'roleplay' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
+              className={`flex items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'roleplay' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
             >
-              <div className={`flex flex-col items-center justify-center ${activeTab === 'roleplay' ? 'scale-110' : ''} transition-transform`}>
-                <MessageSquare className={`w-[22px] h-[22px] mb-1 ${activeTab === 'roleplay' ? 'fill-[#0071E3]/10' : ''}`} />
-                <span className="text-[9px] font-bold tracking-wide">Roleplay</span>
-              </div>
+              <Sparkles className={`w-7 h-7 ${activeTab === 'roleplay' ? 'fill-[#0071E3]/20 scale-110' : 'scale-100'} transition-transform`} />
             </button>
 
             <button
-              onClick={() => { setActiveTab('flashcards'); setShowMobileMore(false); }}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'flashcards' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
+              onClick={() => { setActiveTab('leaderboard'); setShowMobileMore(false); }}
+              className={`flex items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'leaderboard' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
             >
-              <div className={`flex flex-col items-center justify-center ${activeTab === 'flashcards' ? 'scale-110' : ''} transition-transform`}>
-                <Layers className={`w-[22px] h-[22px] mb-1 ${activeTab === 'flashcards' ? 'fill-[#0071E3]/10' : ''}`} />
-                <span className="text-[9px] font-bold tracking-wide">Cards</span>
-              </div>
+              <Trophy className={`w-7 h-7 ${activeTab === 'leaderboard' ? 'fill-[#0071E3]/20 scale-110' : 'scale-100'} transition-transform`} />
             </button>
 
-            {/* More button */}
             <button
-              onClick={() => setShowMobileMore(!showMobileMore)}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ${
-                showMobileMore || ['vocabulary','situations','leaderboard','profile'].includes(activeTab)
-                  ? 'text-[#0071E3]'
-                  : 'text-[#86868B] hover:text-[#1D1D1F]'
-              }`}
+              onClick={() => { setActiveTab('situations'); setShowMobileMore(false); }}
+              className={`flex items-center justify-center flex-1 h-full transition-all duration-300 ${activeTab === 'situations' ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
             >
-              <div className={`flex flex-col items-center justify-center ${
-                showMobileMore ? 'scale-110' : ''
-              } transition-transform`}>
-                <MoreHorizontal className="w-[22px] h-[22px] mb-1" />
-                <span className="text-[9px] font-bold tracking-wide">More</span>
-              </div>
+              <Compass className={`w-7 h-7 ${activeTab === 'situations' ? 'fill-[#0071E3]/20 scale-110' : 'scale-100'} transition-transform`} />
+            </button>
+
+            {/* Vocabulary button */}
+            <button
+              onClick={() => { setActiveTab('vocabulary'); }}
+              className={`flex items-center justify-center flex-1 h-full transition-all duration-300 ${['vocabulary','flashcards'].includes(activeTab) ? 'text-[#0071E3]' : 'text-[#86868B] hover:text-[#1D1D1F]'}`}
+            >
+              <Languages className={`w-7 h-7 ${['vocabulary','flashcards'].includes(activeTab) ? 'fill-[#0071E3]/20 scale-110' : 'scale-100'} transition-transform`} />
             </button>
           </div>
         </nav>
+        </div>
       </div>
 
     </div>

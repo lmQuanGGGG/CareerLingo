@@ -52,22 +52,16 @@ Yêu cầu trả về CHỈ BẰNG JSON ĐỊNH DẠNG SAU, không kèm markdown
   ],
   "quiz": [
     {
-      "q": "Tình huống: [Mô tả một tình huống thực tế tại khách sạn 5 sao có chứa ngữ cảnh của 1 từ vựng trong danh sách]. Bạn sẽ sử dụng từ tiếng Anh nào sau đây?",
-      "a": "Từ tiếng Anh đúng",
-      "options": ["Từ đúng", "Từ sai 1", "Từ sai 2", "Từ sai 3"]
-    },
-    {
-      "q": "Điền từ vào chỗ trống: [Một câu tiếng Anh nói bởi nhân viên khách sạn, chừa 1 khoảng trống].",
-      "a": "Từ tiếng Anh đúng",
-      "options": ["Từ đúng", "Từ sai 1", "Từ sai 2", "Từ sai 3"]
+      "q": "Từ vựng tiếng Anh cho nghĩa '[Nghĩa tiếng Việt của từ]' là gì?",
+      "a": "Từ tiếng Anh đúng"
     }
   ]
 }
 
 Quy định:
 - Hội thoại (dialogue) phải có ít nhất 4-6 câu, lồng ghép tự nhiên ít nhất 3-5 từ vựng trong danh sách. Ngữ cảnh: Khách sạn 5 sao sang trọng.
-- Phần listening.options và quiz.options phải có đúng 4 đáp án.
-- Mảng quiz phải có ĐÚNG 10 câu hỏi (trộn lẫn giữa câu hỏi tình huống tiếng Việt và điền từ tiếng Anh). KHÔNG hỏi nghĩa từ đơn thuần.
+- Phần listening.options phải có đúng 4 đáp án.
+- Mảng quiz phải có ĐÚNG 10 câu hỏi. Mỗi câu phải lấy 1 từ vựng trong danh sách, đưa ra nghĩa tiếng Việt của từ đó và yêu cầu nhập từ tiếng Anh. KHÔNG tạo câu trắc nghiệm, KHÔNG trả về mảng options cho quiz.
 - Đảm bảo tính logic, chuyên nghiệp, tiếng Anh chuẩn bản xứ.`;
 
     const userQuery = `Hãy tạo JSON bài giảng sử dụng các từ vựng sau: ${vocabWords}`;
