@@ -1784,12 +1784,15 @@ export default function App() {
     }
   };
 
-  const toggleFavorite = (word) => {
+  const toggleFavorite = (item) => {
+    const wordKey = typeof item === 'string' ? item : item.word;
     let updated;
-    if (favorites.includes(word)) {
-      updated = favorites.filter(item => item !== word);
+    const exists = favorites.some(f => (typeof f === 'string' ? f : f.word) === wordKey);
+    
+    if (exists) {
+      updated = favorites.filter(f => (typeof f === 'string' ? f : f.word) !== wordKey);
     } else {
-      updated = [...favorites, word];
+      updated = [...favorites, item];
     }
     setFavorites(updated);
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(updated));
@@ -1797,6 +1800,8 @@ export default function App() {
       syncProgress(undefined, undefined, undefined, updated);
     }
   };
+
+  const isFavorite = (word) => favorites.some(f => (typeof f === 'string' ? f : f.word) === word);
 
   const speakText = (text, lang = "en") => {
     if (audioRef.current) {
@@ -2358,7 +2363,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans antialiased selection:bg-blue-100 selection:text-blue-900 pb-12">
+    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans antialiased selection:bg-blue-100 selection:text-blue-900 pb-12 overflow-x-hidden">
       
       <header className="sticky top-0 z-50 bg-[#FFFFFF]/80 backdrop-blur-md border-b border-gray-200 px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink min-w-0">
@@ -2702,11 +2707,11 @@ export default function App() {
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <button
-                              onClick={() => toggleFavorite(dictResult.word)}
-                              className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-colors ${favorites.includes(dictResult.word) ? 'bg-[#FF9500]/10 text-[#FF9500]' : 'bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                              onClick={() => toggleFavorite(dictResult)}
+                              className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-colors ${isFavorite(dictResult.word) ? 'bg-[#FF9500]/10 text-[#FF9500]' : 'bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                               title="Lưu từ vựng"
                             >
-                              {favorites.includes(dictResult.word) ? <BookmarkCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />}
+                              {isFavorite(dictResult.word) ? <BookmarkCheck className="w-5 h-5 sm:w-6 sm:h-6" /> : <Bookmark className="w-5 h-5 sm:w-6 sm:h-6" />}
                             </button>
                             <button
                               onClick={handleCopyDict}
@@ -3197,7 +3202,7 @@ export default function App() {
                             onClick={() => toggleFavorite(v.word)}
                             className="bg-[#F5F5F7] hover:bg-gray-200 p-2.5 rounded-xl text-[#1D1D1F] transition-colors"
                           >
-                            {favorites.includes(v.word) ? (
+                            {isFavorite(v.word) ? (
                               <BookmarkCheck className="w-5 h-5 text-[#0071E3]" />
                             ) : (
                               <Bookmark className="w-5 h-5" />
@@ -3348,7 +3353,7 @@ export default function App() {
                       "{(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).blankSentence}"
                     </p>
 
-                    <div className="flex gap-4 max-w-lg">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
                       <input 
                         type="text"
                         lang="en"
@@ -3423,7 +3428,7 @@ export default function App() {
                       ))}
                     </div>
 
-                    <div className="flex gap-4 pt-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 w-full">
                       <button 
                         onClick={() => {
                           const sentence = listeningScrambledResult.join(' ');
@@ -3805,7 +3810,7 @@ export default function App() {
                                   </button>
                                 </div>
                               </div>
-                              <p className={`text-base ${isRep ? 'text-[#0071E3] font-semibold' : 'text-[#1D1D1F] font-medium'}`}>{cleanText}</p>
+                              <p className={`${isRep ? 'text-[#0071E3] font-semibold' : 'text-[#1D1D1F] font-medium'}`}>{cleanText}</p>
                               {dialogTranslations[`scenario-${selectedSituation.id}-${lidx}`] && (
                                 <div className="mt-2 p-3 bg-blue-50/50 rounded-xl border border-blue-100 relative group/trans">
                                   <button 
@@ -3915,9 +3920,10 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(selectedVocabCategory === 'Favorites' 
-                  ? favorites.slice().reverse().map(word => {
-                      const existing = CURRENT_VOCAB.find(v => v.word.toLowerCase() === word.toLowerCase());
-                      return existing || { word, mean: 'Từ vựng tra cứu thêm (nhập vào ô tìm kiếm để tra lại nghĩa)', ipa: '', category: 'Saved Custom', eg: '' };
+                  ? favorites.slice().reverse().map(item => {
+                      const wordKey = typeof item === 'string' ? item : item.word;
+                      const existing = CURRENT_VOCAB.find(v => v.word.toLowerCase() === wordKey.toLowerCase());
+                      return existing || (typeof item === 'object' ? item : { word: wordKey, mean: 'Từ vựng tra cứu thêm', ipa: '', category: 'Saved Custom', eg: '' });
                     })
                   : CURRENT_VOCAB
                 )
