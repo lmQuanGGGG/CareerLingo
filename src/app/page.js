@@ -1391,7 +1391,7 @@ export default function App() {
           if (data.display_name) {
             setDisplayName(data.display_name);
           } else {
-            setDisplayName(user.email.split('@')[0]);
+            setDisplayName(user.email.split('@')[0].replace(/\./g, ' '));
           }
           
           const today = new Date();
@@ -1628,10 +1628,11 @@ export default function App() {
   };
 
   const handleNameChange = (newName) => {
-    setDisplayName(newName);
+    const formattedName = newName.replace(/\./g, ' ');
+    setDisplayName(formattedName);
     setIsEditingName(false);
-    syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newName);
-    setLeaderboardUsers(prev => prev.map(u => u.id === user?.id ? { ...u, display_name: newName } : u));
+    syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, formattedName);
+    setLeaderboardUsers(prev => prev.map(u => u.id === user?.id ? { ...u, display_name: formattedName } : u));
   };
 
   useEffect(() => {
@@ -2467,10 +2468,10 @@ export default function App() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 w-full group">
-                        <p className="text-sm font-bold text-[#1D1D1F] truncate">{displayName || user?.email}</p>
+                        <p className="text-sm font-bold text-[#1D1D1F] truncate capitalize">{displayName || user?.email?.split('@')[0].replace(/\./g, ' ')}</p>
                         <button
                           onClick={() => {
-                            setTempName(displayName || user?.email?.split('@')[0] || '');
+                            setTempName(displayName || user?.email?.split('@')[0].replace(/\./g, ' ') || '');
                             setIsEditingName(true);
                           }}
                           className="text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
@@ -4549,11 +4550,11 @@ export default function App() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2 group cursor-pointer" onClick={() => {
-                  setTempName(displayName || user?.email?.split('@')[0] || '');
+                  setTempName(displayName || user?.email?.split('@')[0].replace(/\./g, ' ') || '');
                   setIsEditingName(true);
                 }}>
-                  <h2 className="text-xl sm:text-2xl font-bold text-[#1D1D1F] tracking-tight truncate max-w-[200px] sm:max-w-[300px]">
-                    {displayName || user?.email || "Chưa đăng nhập"}
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#1D1D1F] tracking-tight truncate max-w-[200px] sm:max-w-[300px] capitalize">
+                    {displayName || user?.email?.split('@')[0].replace(/\./g, ' ') || "Chưa đăng nhập"}
                   </h2>
                   <Edit3 className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 </div>
