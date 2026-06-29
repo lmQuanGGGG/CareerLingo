@@ -1433,10 +1433,25 @@ export default function App() {
           let currentStreak = data.streak || 0;
           let lastDateStr = data.last_active_date;
           
-          if (data.display_name) {
-            setDisplayName(data.display_name);
+          let currentDisplayName = data.display_name;
+          if (!currentDisplayName) {
+            currentDisplayName = user.email.split('@')[0].replace(/\./g, ' ');
+            setDisplayName(currentDisplayName);
           } else {
-            setDisplayName(user.email.split('@')[0].replace(/\./g, ' '));
+            setDisplayName(currentDisplayName);
+          }
+          
+          if (data.avatar_url) {
+            setAvatarUrl(data.avatar_url);
+          } else {
+            const initial = currentDisplayName.charAt(0).toUpperCase();
+            const colors = ['1D1D1F', '3B82F6', '8B5CF6', 'EF4444', '10B981', 'F59E0B'];
+            const color = colors[initial.charCodeAt(0) % colors.length];
+            const newAvatar = `https://ui-avatars.com/api/?name=${initial}&background=${color}&color=fff&size=150`;
+            setAvatarUrl(newAvatar);
+            
+            // Save it to DB
+            supabase.from('user_progress').update({ avatar_url: newAvatar }).eq('id', user.id).then();
           }
           
           const today = new Date();
@@ -1530,7 +1545,6 @@ export default function App() {
           if (data.ai_scenarios) setAiScenarios(data.ai_scenarios);
           if (data.ai_lessons) setAiLessons(data.ai_lessons);
           setLastActiveDate(lastDateStr);
-          if (data.avatar_url) setAvatarUrl(data.avatar_url);
 
           if (didUpdateStreak) {
             await supabase.from('user_progress').upsert({
@@ -1647,6 +1661,16 @@ export default function App() {
     let finalStats = newPerformanceStats !== undefined ? newPerformanceStats : performanceStats;
     let trackToSave = newCareerTrack !== undefined ? newCareerTrack : careerTrack;
     
+    let finalAvatarUrl = newAvatarUrl !== undefined ? newAvatarUrl : avatarUrl;
+    if (!finalAvatarUrl) {
+      const dn = newDisplayName !== undefined ? newDisplayName : displayName;
+      const initial = dn.charAt(0).toUpperCase();
+      const colors = ['1D1D1F', '3B82F6', '8B5CF6', 'EF4444', '10B981', 'F59E0B'];
+      const color = colors[initial.charCodeAt(0) % colors.length];
+      finalAvatarUrl = `https://ui-avatars.com/api/?name=${initial}&background=${color}&color=fff&size=150`;
+      setAvatarUrl(finalAvatarUrl);
+    }
+    
     // Here we save under the CURRENT careerTrack state because dt and newCompleted belong to it
     const updatedCompleted = { ...allData.completed, [careerTrack]: newCompleted !== undefined ? newCompleted : completedDays };
     const updatedAllTasks = { 
@@ -1666,7 +1690,7 @@ export default function App() {
     if (newFavs !== undefined) updateData.favorites = newFavs;
     if (newScenarios !== undefined) updateData.ai_scenarios = newScenarios;
     if (newAiLessons !== undefined) updateData.ai_lessons = newAiLessons;
-    if (newAvatarUrl !== undefined) updateData.avatar_url = newAvatarUrl;
+    updateData.avatar_url = finalAvatarUrl;
     if (newDisplayName !== undefined) updateData.display_name = newDisplayName;
 
     await supabase.from('user_progress').update(updateData).eq('id', user.id);
