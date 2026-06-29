@@ -4788,7 +4788,7 @@ export default function App() {
         </div>
       </div>
 
-      <ChatWidget user={user} supabase={supabase} />
+      <ChatWidget user={user} supabase={supabase} favorites={favorites} />
 
     </div>
   );

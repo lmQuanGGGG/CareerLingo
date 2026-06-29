@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Search, Send, ArrowLeft, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Search, Send, ArrowLeft, Loader2, Bookmark } from 'lucide-react';
 
-export default function ChatWidget({ user, supabase }) {
+export default function ChatWidget({ user, supabase, favorites = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   
@@ -20,6 +20,7 @@ export default function ChatWidget({ user, supabase }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [showVocabPicker, setShowVocabPicker] = useState(false);
   
   const messagesEndRef = useRef(null);
 
@@ -83,6 +84,8 @@ export default function ChatWidget({ user, supabase }) {
       
       if (data && !error) {
         setSearchResults(data);
+      } else if (error) {
+        console.error("Search error:", error);
       }
       setIsSearching(false);
     }, 500);
@@ -142,6 +145,43 @@ export default function ChatWidget({ user, supabase }) {
       
     if (data && !error) {
       // Replace temp message with real one
+      setMessages(prev => prev.map(m => m.id === tempMsg.id ? data : m));
+    }
+  };
+
+  const handleSendVocab = async (vocabObj) => {
+    // If it's a string from old data, handle gracefully
+    const wordKey = typeof vocabObj === 'string' ? vocabObj : vocabObj.word;
+    const meaning = typeof vocabObj === 'object' ? (vocabObj.meaning || vocabObj.mean) : '';
+    const ipa = typeof vocabObj === 'object' ? vocabObj.ipa : '';
+    
+    let formattedMsg = `📚 Từ vựng: ${wordKey}`;
+    if (ipa) formattedMsg += `\n🗣️ ${ipa}`;
+    if (meaning) formattedMsg += `\n📖 ${meaning}`;
+    
+    // Optimistic append
+    const tempMsg = {
+      id: 'temp-' + Date.now(),
+      sender_id: user.id,
+      receiver_id: activeChatUser.id,
+      content: formattedMsg,
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, tempMsg]);
+    scrollToBottom();
+    setShowVocabPicker(false);
+
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        sender_id: user.id,
+        receiver_id: activeChatUser.id,
+        content: formattedMsg
+      })
+      .select()
+      .single();
+      
+    if (data && !error) {
       setMessages(prev => prev.map(m => m.id === tempMsg.id ? data : m));
     }
   };
@@ -267,22 +307,54 @@ export default function ChatWidget({ user, supabase }) {
                 </div>
                 
                 {/* Chat Input */}
-                <form onSubmit={handleSendMessage} className="p-3 bg-white border-t flex gap-2 shrink-0">
-                  <input 
-                    type="text" 
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Nhắn tin..." 
-                    className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:bg-gray-50 border border-transparent focus:border-blue-200 transition-colors"
-                  />
-                  <button 
-                    type="submit"
-                    disabled={!newMessage.trim()}
-                    className="w-10 h-10 rounded-full bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 transition-opacity shrink-0 hover:bg-blue-600"
-                  >
-                    <Send className="w-4 h-4 ml-0.5" />
-                  </button>
-                </form>
+                <div className="relative border-t bg-white shrink-0 p-2">
+                  {showVocabPicker && (
+                    <div className="absolute bottom-full left-0 right-0 bg-white border border-gray-100 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] rounded-t-2xl max-h-48 overflow-y-auto p-2 z-10 flex flex-col gap-1">
+                      <div className="flex justify-between items-center mb-1 px-2 py-1">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Chia sẻ từ đã lưu</span>
+                        <button onClick={() => setShowVocabPicker(false)} className="p-1 hover:bg-gray-100 rounded-full text-gray-400">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                      {favorites.length > 0 ? favorites.map((f, i) => (
+                        <button 
+                          key={i} 
+                          onClick={() => handleSendVocab(f)}
+                          className="text-left px-3 py-2 text-sm hover:bg-blue-50 rounded-xl transition-colors truncate"
+                        >
+                          <span className="font-semibold text-blue-600">{typeof f === 'string' ? f : f.word}</span>
+                          {typeof f === 'object' && f.meaning && <span className="text-gray-500 text-xs ml-2 truncate">- {f.meaning}</span>}
+                        </button>
+                      )) : (
+                        <p className="text-xs text-center text-gray-400 p-2">Chưa có từ nào trong Sổ tay</p>
+                      )}
+                    </div>
+                  )}
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => setShowVocabPicker(!showVocabPicker)}
+                      className="w-10 h-10 rounded-full bg-gray-50 text-gray-400 hover:text-blue-500 hover:bg-blue-50 flex items-center justify-center shrink-0 transition-colors"
+                      title="Chia sẻ từ vựng"
+                    >
+                      <Bookmark className="w-5 h-5" />
+                    </button>
+                    <input 
+                      type="text" 
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      placeholder="Nhắn tin..." 
+                      className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:bg-gray-50 border border-transparent focus:border-blue-200 transition-colors"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!newMessage.trim()}
+                      className="w-10 h-10 rounded-full bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 transition-opacity shrink-0 hover:bg-blue-600"
+                    >
+                      <Send className="w-4 h-4 ml-0.5" />
+                    </button>
+                  </form>
+                </div>
               </div>
             )}
             
