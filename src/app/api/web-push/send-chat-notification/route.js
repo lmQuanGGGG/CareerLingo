@@ -19,9 +19,9 @@ if (vapidPublicKey && vapidPrivateKey) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { receiverId, senderName, content } = body;
+    const { receiverId, senderId, senderName, content } = body;
 
-    if (!receiverId || !senderName || !content) {
+    if (!receiverId || !senderId || !senderName || !content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -48,7 +48,7 @@ export async function POST(req) {
     const payload = JSON.stringify({
       title: `${senderName} vừa nhắn tin cho bạn`,
       body: displayContent,
-      url: '/'
+      url: `/?chat_with=${senderId}`
     });
 
     let successCount = 0;

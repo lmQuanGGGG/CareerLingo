@@ -216,6 +216,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           receiverId: activeChatUser.id, 
+          senderId: user.id,
           senderName: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Ai đó', 
           content: msgContent 
         })
@@ -262,6 +263,18 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
       .single();
       
     if (data && !error) {
+      // Send push notification to receiver
+      fetch('/api/web-push/send-chat-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          receiverId: activeChatUser.id, 
+          senderId: user.id,
+          senderName: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Ai đó', 
+          content: finalFormattedMsg 
+        })
+      }).catch(console.error);
+
       setMessages(prev => prev.map(m => m.id === tempMsg.id ? data : m));
     }
   };
