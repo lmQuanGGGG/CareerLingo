@@ -3983,10 +3983,10 @@ export default function App() {
                           <Volume2 className="w-5 h-5" />
                         </button>
                         <button 
-                          onClick={() => toggleFavorite(v.word)}
+                          onClick={() => toggleFavorite(v)}
                           className="bg-[#F5F5F7] hover:bg-gray-200 p-3 rounded-xl text-[#1D1D1F] transition-colors"
                         >
-                          {favorites.includes(v.word) ? (
+                          {isFavorite(v.word) ? (
                             <BookmarkCheck className="w-5 h-5 text-[#0071E3]" />
                           ) : (
                             <Bookmark className="w-5 h-5" />
