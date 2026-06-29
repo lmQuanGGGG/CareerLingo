@@ -42,7 +42,7 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.user_progress (id, display_name)
-  values (new.id, split_part(new.email, '@', 1));
+  values (new.id, replace(split_part(new.email, '@', 1), '.', ' '));
   return new;
 end;
 $$ language plpgsql security definer;
