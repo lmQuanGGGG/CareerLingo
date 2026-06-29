@@ -3460,6 +3460,11 @@ export default function App() {
                         spellCheck="false"
                         value={listeningBlankInput}
                         onChange={(e) => setListeningBlankInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.target.blur();
+                          }
+                        }}
                         placeholder="Type the word..."
                         className="bg-white border border-gray-300 rounded-xl px-5 py-3 text-base font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] flex-1 shadow-sm"
                       />
@@ -3699,6 +3704,7 @@ export default function App() {
                                   onChange={(e) => setQuizInputs(prev => ({...prev, [qidx]: e.target.value}))}
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter' && quizInputs[qidx] && !isAnswered) {
+                                      e.target.blur();
                                       const userAnswer = quizInputs[qidx].trim().toLowerCase();
                                       const correctAns = q.a.trim().toLowerCase();
                                       const correct = userAnswer === correctAns;
@@ -3775,7 +3781,10 @@ export default function App() {
                       placeholder="Bạn đang gặp tình huống khó xử nào? (VD: Khách phàn nàn đồ ăn mặn...)"
                       className="w-full bg-white border border-blue-200 rounded-2xl px-5 py-3.5 text-base text-[#1D1D1F] focus:outline-none focus:border-blue-500 transition-colors"
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleGenerateScenario();
+                        if (e.key === 'Enter') {
+                          e.target.blur();
+                          handleGenerateScenario();
+                        }
                       }}
                     />
                   </div>
@@ -3997,6 +4006,7 @@ export default function App() {
                     spellCheck="false"
                     value={vocabSearch}
                     onChange={(e) => setVocabSearch(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                     placeholder="Search word or meaning..."
                     className="w-full bg-[#F5F5F7] border border-gray-200 rounded-2xl pl-12 pr-5 py-3.5 text-base text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] focus:bg-white transition-colors"
                   />
@@ -4324,7 +4334,10 @@ export default function App() {
                     value={roleplayInput}
                     onChange={(e) => setRoleplayInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSendMessageToAIGuest();
+                      if (e.key === 'Enter') {
+                        e.target.blur();
+                        handleSendMessageToAIGuest();
+                      }
                     }}
                     placeholder="Type your response..."
                     className="bg-[#F5F5F7] border border-gray-200 rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium text-[#1D1D1F] flex-1 min-w-0 focus:outline-none focus:border-[#0071E3] focus:bg-white transition-colors"

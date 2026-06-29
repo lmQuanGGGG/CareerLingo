@@ -466,6 +466,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                       placeholder="Tìm tên người dùng..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                       className="w-full bg-gray-100 rounded-full py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 focus:ring-gray-500/20 transition-all"
                     />
                   </div>
@@ -604,6 +605,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                             placeholder="Tìm từ vựng..." 
                             value={vocabSearchQuery}
                             onChange={(e) => setVocabSearchQuery(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
                             onFocus={() => { setIsKeyboardOpen(true); setTimeout(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, 300); }}
                             onBlur={() => setIsKeyboardOpen(false)}
                             className="w-full bg-gray-50 rounded-lg py-1.5 pl-7 pr-2 text-xs outline-none focus:ring-1 focus:ring-gray-300 transition-all"
