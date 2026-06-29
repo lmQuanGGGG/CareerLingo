@@ -63,11 +63,12 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
             .in('id', chatUserIds);
             
           if (usersData) {
-            usersData.forEach(u => {
-              u.latestMessage = latestMsgsMap[u.id];
-            });
-            usersData.sort((a, b) => new Date(b.latestMessage.created_at) - new Date(a.latestMessage.created_at));
-            setRecentChats(usersData);
+             usersData.forEach(u => {
+               u.content = latestMsgsMap[u.id].content;
+               u.created_at = latestMsgsMap[u.id].created_at;
+             });
+             usersData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+             setRecentChats(usersData);
           }
         } else {
           setRecentChats([]);
@@ -78,6 +79,33 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
     
     loadRecentChats();
   }, [isOpen, viewState, user, supabase, searchQuery]);
+
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  const updateRecentChatsWithSentMsg = async (msg) => {
+    let found = false;
+    setRecentChats(prev => {
+      const existingUserIndex = prev.findIndex(u => u.id === msg.receiver_id);
+      if (existingUserIndex >= 0) {
+        found = true;
+        const newList = [...prev];
+        const updatedUser = { ...newList[existingUserIndex], content: msg.content, created_at: msg.created_at };
+        newList.splice(existingUserIndex, 1);
+        newList.unshift(updatedUser);
+        return newList;
+      }
+      return prev;
+    });
+    
+    if (!found) {
+      const { data } = await supabase.from('chat_users_view').select('*').eq('id', msg.receiver_id).single();
+      if (data) {
+        data.content = msg.content;
+        data.created_at = msg.created_at;
+        setRecentChats(prev => [data, ...prev]);
+      }
+    }
+  };
 
   const viewStateRef = useRef(viewState);
   useEffect(() => { viewStateRef.current = viewState; }, [viewState]);
@@ -257,6 +285,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
 
       // Replace temp message with real one
       setMessages(prev => prev.map(m => m.id === tempMsg.id ? data : m));
+      updateRecentChatsWithSentMsg(data);
     }
   };
 
@@ -309,6 +338,7 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
       }).catch(console.error);
 
       setMessages(prev => prev.map(m => m.id === tempMsg.id ? data : m));
+      updateRecentChatsWithSentMsg(data);
     }
   };
 
@@ -388,11 +418,11 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
   if (!user) return null; // Don't show chat if not logged in
 
   return (
-    <div className="fixed bottom-24 sm:bottom-8 right-4 sm:right-8 z-50 flex flex-col items-end">
+    <div className={`fixed ${isKeyboardOpen ? 'bottom-2' : 'bottom-20'} sm:bottom-6 right-4 z-50 flex flex-col items-end pointer-events-none transition-all duration-300`}>
       
       {/* Chat Window Popup */}
       {isOpen && (
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-[90vw] sm:w-[350px] h-[500px] max-h-[70dvh] sm:max-h-[70vh] mb-4 flex flex-col overflow-hidden animate-fadeIn origin-bottom-right">
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-[90vw] sm:w-[350px] h-[500px] max-h-[70dvh] sm:max-h-[70vh] mb-4 flex flex-col overflow-hidden animate-fadeIn origin-bottom-right pointer-events-auto">
           
           {/* Header */}
           <div className="bg-[#1D1D1F] text-white p-4 flex justify-between items-center shrink-0">
@@ -572,7 +602,8 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                             placeholder="Tìm từ vựng..." 
                             value={vocabSearchQuery}
                             onChange={(e) => setVocabSearchQuery(e.target.value)}
-                            onFocus={() => setTimeout(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, 300)}
+                            onFocus={() => { setIsKeyboardOpen(true); setTimeout(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, 300); }}
+                            onBlur={() => setIsKeyboardOpen(false)}
                             className="w-full bg-gray-50 rounded-lg py-1.5 pl-7 pr-2 text-xs outline-none focus:ring-1 focus:ring-gray-300 transition-all"
                           />
                         </div>
@@ -629,7 +660,8 @@ export default function ChatWidget({ user, supabase, favorites = [], toggleFavor
                       type="text" 
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      onFocus={() => setTimeout(scrollToBottom, 300)}
+                      onFocus={() => { setIsKeyboardOpen(true); setTimeout(scrollToBottom, 300); }}
+                      onBlur={() => setIsKeyboardOpen(false)}
                       placeholder="Nhắn tin..." 
                       className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:bg-gray-50 border border-transparent focus:border-gray-300 transition-colors"
                     />
