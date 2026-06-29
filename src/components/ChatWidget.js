@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Search, Send, ArrowLeft, Loader2, Bookmark } from 'lucide-react';
+import { MessageCircle, X, Search, Send, ArrowLeft, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 
-export default function ChatWidget({ user, supabase, favorites = [] }) {
+export default function ChatWidget({ user, supabase, favorites = [], toggleFavorite, isFavorite }) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   
@@ -246,11 +246,23 @@ export default function ChatWidget({ user, supabase, favorites = [] }) {
     if (msg.content.startsWith('[VOCAB_CARD]')) {
       try {
         const data = JSON.parse(msg.content.replace('[VOCAB_CARD]', ''));
+        const isFav = isFavorite ? isFavorite(data.word) : false;
+        
         return (
           <div className={`flex flex-col gap-1 p-2 rounded-xl mt-1 ${isMe ? 'bg-white/10' : 'bg-gray-50 border border-gray-100'}`}>
-            <div className="flex items-center gap-2">
-              <span className={`font-bold text-base ${isMe ? 'text-white' : 'text-[#1D1D1F]'}`}>{data.word}</span>
-              {data.ipa && <span className={`text-xs ${isMe ? 'text-gray-300' : 'text-gray-500'}`}>{data.ipa}</span>}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className={`font-bold text-base ${isMe ? 'text-white' : 'text-[#1D1D1F]'}`}>{data.word}</span>
+                {data.ipa && <span className={`text-xs ${isMe ? 'text-gray-300' : 'text-gray-500'}`}>{data.ipa}</span>}
+              </div>
+              {!isMe && toggleFavorite && (
+                <button 
+                  onClick={() => toggleFavorite(data)}
+                  className={`p-1.5 rounded-full transition-colors ${isFav ? 'bg-[#0071E3]/10 text-[#0071E3]' : 'bg-white text-gray-400 hover:text-gray-600 hover:bg-gray-100 shadow-sm border border-gray-200'}`}
+                >
+                  {isFav ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+                </button>
+              )}
             </div>
             {data.meaning && <span className={`text-sm ${isMe ? 'text-gray-200' : 'text-gray-600'}`}>{data.meaning}</span>}
           </div>
