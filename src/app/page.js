@@ -1746,6 +1746,7 @@ export default function App() {
 
   // Audio Player States
   const audioRef = useRef(null);
+  const recognitionRef = useRef(null);
   const [audioPlayer, setAudioPlayer] = useState({
     isVisible: false,
     isPlaying: false,
@@ -1971,12 +1972,18 @@ export default function App() {
   };
 
   const startSpeechRecognition = (onResultCallback) => {
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return null;
+    }
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Trình duyệt của bạn chưa hỗ trợ nhận diện giọng nói. Hãy thử Chrome trên Desktop!");
       return null;
     }
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.continuous = false;
     recognition.lang = 'en-US';
     recognition.interimResults = false;
@@ -2009,48 +2016,48 @@ export default function App() {
     const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
     const currentPrompt = speakingData[currentSpeakingIndex] || speakingData[0];
     
-    startSpeechRecognition(async (text) => {
+    startSpeechRecognition((text) => {
       setRecognizedText(text);
       setSpeakingScore('...');
-      setSpeakingFeedback('AI đang phân tích độ sang trọng trong câu nói của bạn...');
+      setSpeakingFeedback('Đang đánh giá phát âm của bạn...');
       setSpeakingBetterVersion('');
 
-      try {
-        const res = await fetch('/api/evaluate-speech', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            userInput: text,
-            targetPrompt: currentPrompt.prompt
-          })
-        });
+      // Đánh giá đơn giản bằng cách đếm số từ trùng khớp
+      const cleanUser = text.toLowerCase().replace(/[^\w\s]/g, '');
+      const cleanTarget = currentPrompt.prompt.toLowerCase().replace(/[^\w\s]/g, '');
+      
+      const targetWords = cleanTarget.split(/\s+/).filter(w => w.length > 0);
+      const userWords = cleanUser.split(/\s+/).filter(w => w.length > 0);
+      
+      let matchCount = 0;
+      targetWords.forEach(w => {
+        if (userWords.includes(w)) matchCount++;
+      });
+      
+      const calculatedScore = targetWords.length > 0 ? Math.round((matchCount / targetWords.length) * 100) : 0;
+      
+      let feedback = '';
+      if (calculatedScore >= 80) feedback = "Tuyệt vời! Bạn phát âm rất chuẩn xác.";
+      else if (calculatedScore >= 50) feedback = "Khá tốt! Cố gắng phát âm rõ chữ hơn một chút nhé.";
+      else feedback = "Chưa rõ lắm, bạn hãy thử đọc lại to và chậm hơn xem sao.";
 
-        if (res.ok) {
-          const data = await res.json();
-          setSpeakingScore(data.score || 0);
-          setSpeakingFeedback(data.feedback || '');
-          if (data.better_version) {
-            setSpeakingBetterVersion(data.better_version);
-          }
-          if (data.score > 0) {
-            addXp(Math.round(data.score / 5));
-            const newStats = {
-              ...performanceStats,
-              speaking_sum: (performanceStats?.speaking_sum || 0) + data.score,
-              speaking_count: (performanceStats?.speaking_count || 0) + 1
-            };
-            setPerformanceStats(newStats);
-            setSpeakingPassScores(prev => ({ ...prev, [currentSpeakingIndex]: data.score }));
-            syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
-          }
-        } else {
-          setSpeakingScore(0);
-          setSpeakingFeedback("Lỗi kết nối AI. Vui lòng thử lại.");
+      // Tạo độ trễ ảo cho mượt
+      setTimeout(() => {
+        setSpeakingScore(calculatedScore);
+        setSpeakingFeedback(feedback);
+        
+        if (calculatedScore > 0) {
+          addXp(Math.round(calculatedScore / 5));
+          const newStats = {
+            ...performanceStats,
+            speaking_sum: (performanceStats?.speaking_sum || 0) + calculatedScore,
+            speaking_count: (performanceStats?.speaking_count || 0) + 1
+          };
+          setPerformanceStats(newStats);
+          setSpeakingPassScores(prev => ({ ...prev, [currentSpeakingIndex]: calculatedScore }));
+          syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
         }
-      } catch (e) {
-        setSpeakingScore(0);
-        setSpeakingFeedback("Không thể kết nối đến máy chủ AI.");
-      }
+      }, 600);
     });
   };
 
@@ -3025,7 +3032,7 @@ export default function App() {
                             if (!isLocked) {
                               if (selectedDayId !== day.id) {
                                 const tasks = dayTasks[day.id] || {};
-                                const order = ['vocab', 'dialogue', 'listening', 'speaking', 'quiz'];
+                                const order = ['vocab', 'listening', 'speaking', 'quiz'];
                                 const resumeTab = order.find(t => !tasks[t]) || 'vocab';
                                 setLessonActiveSubTab(resumeTab);
                                 // Also clear quiz state when switching days to prevent answers from leaking
@@ -3099,7 +3106,6 @@ export default function App() {
               <div className="flex overflow-x-auto gap-2 no-scrollbar bg-[#FFFFFF]/90 p-2 rounded-2xl shadow-sm border border-gray-100">
                 {[
                   { id: 'vocab', label: "Vocabulary", icon: Languages },
-                  { id: 'dialogue', label: "Dialogue", icon: MessageCircle },
                   { id: 'listening', label: "Listening", icon: Volume2 },
                   { id: 'speaking', label: "Speaking", icon: Mic },
                   { id: 'quiz', label: "Quiz", icon: Trophy }
@@ -4358,10 +4364,10 @@ export default function App() {
                   />
                   <button 
                     onClick={handleRoleplayVoiceInput}
-                    className="p-3 sm:p-4 bg-[#F5F5F7] hover:bg-gray-200 text-[#1D1D1F] rounded-2xl transition-all shadow-sm shrink-0"
-                    title="Voice input"
+                    className={`p-3 sm:p-4 rounded-2xl transition-all shadow-sm shrink-0 ${isRecording ? 'bg-red-500 animate-pulse text-white' : 'bg-[#F5F5F7] hover:bg-gray-200 text-[#1D1D1F]'}`}
+                    title={isRecording ? "Đang thu âm... (Nhấn để dừng)" : "Voice input"}
                   >
-                    <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
+                    {isRecording ? <Mic className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
                   </button>
                   <button
                     onClick={handleSendMessageToAIGuest}
