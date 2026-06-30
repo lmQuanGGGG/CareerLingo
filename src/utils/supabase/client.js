@@ -8,4 +8,4 @@ export const createClient = () =>
     supabaseUrl,
     supabaseKey
   );
-//nay met qua
+//nay met qua bị 
