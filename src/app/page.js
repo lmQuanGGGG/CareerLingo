@@ -1133,6 +1133,7 @@ export default function App() {
   const [showMobileMore, setShowMobileMore] = useState(false);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const lastActiveDateRef = useRef(null);
   const [completedDays, setCompletedDays] = useState([]);
   const [dayTasks, setDayTasks] = useState({});
   const [careerTrack, setCareerTrack] = useState('hospitality');
@@ -1156,6 +1157,7 @@ export default function App() {
   const [listeningSelectedOption, setListeningSelectedOption] = useState(null);
   const [listeningPassFlags, setListeningPassFlags] = useState({ mcq: false, blank: false, scramble: false });
   const [speakingPassScores, setSpeakingPassScores] = useState({});
+  const [speakingResults, setSpeakingResults] = useState({});
   const [listeningShowResult, setListeningShowResult] = useState(false);
   const [listeningBlankInput, setListeningBlankInput] = useState('');
   const [listeningBlankCorrect, setListeningBlankCorrect] = useState(null);
@@ -1461,9 +1463,7 @@ export default function App() {
 
           if (!lastDateStr) {
              // First time logging date (or recovering from crash bug)
-             lastDateStr = todayStr;
-             currentStreak = (data.completed_days && data.completed_days.length > 0) ? 1 : 0;
-             didUpdateStreak = true;
+             // DO NOTHING with streak
           } else if (lastDateStr !== todayStr) {
              const lastDate = new Date(lastDateStr);
              const todayDate = new Date(todayStr);
@@ -1472,23 +1472,20 @@ export default function App() {
 
              if (diffDays === 1) {
                 // Consecutive day
-                currentStreak += 1;
-                lastDateStr = todayStr;
-                didUpdateStreak = true;
+                // DO NOT increment streak or update lastDateStr here!
+                // Streak is only incremented when completing a lesson today.
              } else if (diffDays > 1) {
                 // Missed days
                 if (currentStreak === 0) {
                    // Streak đã = 0, không cần trừ XP hay thông báo gì
-                   lastDateStr = todayStr;
-                   didUpdateStreak = true;
                 } else {
                    const missedDays = diffDays - 1;
                    const cost = missedDays * 50;
                    if (currentXp >= cost) {
                       // Streak freeze
                       currentXp -= cost;
-                      currentStreak += 1;
-                      lastDateStr = todayStr;
+                      // Giữ nguyên streak
+                      lastDateStr = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Giả lập hôm qua đã học để nối mạch
                       didUpdateStreak = true;
                       setStreakMessage({ type: 'saved', missedDays, cost });
                       sendLocalNotification('Chuỗi học tập đã được cứu! 🛡️', {
@@ -1498,13 +1495,15 @@ export default function App() {
                    } else {
                       // Streak lost
                       currentStreak = 0;
-                      lastDateStr = todayStr;
+                      lastDateStr = new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Để hôm nay học thì lên lại 1
                       didUpdateStreak = true;
                       setStreakMessage({ type: 'lost', missedDays, cost });
                    }
                 }
              }
           }
+          
+          lastActiveDateRef.current = lastDateStr;
 
           setXp(currentXp);
           setStreak(currentStreak);
@@ -1599,10 +1598,23 @@ export default function App() {
     if (tasks?.vocab && tasks?.quiz && tasks?.speaking && tasks?.listening && !completedDays.includes(selectedDayId)) {
       const newCompleted = [...completedDays, selectedDayId];
       setCompletedDays(newCompleted);
-      syncProgress(undefined, undefined, newCompleted, undefined, undefined, undefined, undefined, newTasksObj);
+      
+      // Streak completion logic
+      const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      let newStreak = streak;
+      let didCompleteLessonToday = false;
+      
+      if (lastActiveDateRef.current !== todayStr) {
+        newStreak += 1;
+        setStreak(newStreak);
+        lastActiveDateRef.current = todayStr;
+        didCompleteLessonToday = true;
+      }
+
+      syncProgress(xp + 50, newStreak, newCompleted, undefined, undefined, undefined, undefined, newTasksObj, undefined, undefined, undefined, didCompleteLessonToday);
       setShowDayCompleteAnimation(selectedDayId);
     } else {
-      syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, newTasksObj);
+      syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, newTasksObj, undefined, undefined, undefined, false);
     }
   };
 
@@ -1652,7 +1664,7 @@ export default function App() {
     }
   }, [speakingPassScores, selectedDayId, activeTab, dayTasks, aiLessons]);
 
-  const syncProgress = async (newXp, newStreak, newCompleted, newFavs, newScenarios, newAiLessons, newAvatarUrl, newDayTasks, newPerformanceStats, newCareerTrack, newDisplayName) => {
+  const syncProgress = async (newXp, newStreak, newCompleted, newFavs, newScenarios, newAiLessons, newAvatarUrl, newDayTasks, newPerformanceStats, newCareerTrack, newDisplayName, didCompleteLessonToday = false) => {
     if (!user) return;
     const todayStr = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
     
@@ -1688,7 +1700,8 @@ export default function App() {
     
     setAllData(prev => ({ ...prev, completed: updatedCompleted, tasks: updatedAllTasks }));
 
-    const updateData = { last_active_date: todayStr };
+    const updateData = {};
+    if (didCompleteLessonToday) updateData.last_active_date = todayStr;
     if (newXp !== undefined) updateData.xp = newXp;
     if (newStreak !== undefined || finalStreak !== streak) updateData.streak = finalStreak;
     if (newCompleted !== undefined) updateData.completed_days = updatedCompleted;
@@ -1724,7 +1737,7 @@ export default function App() {
           const res = await fetch('/api/lesson', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ vocabList })
+            body: JSON.stringify({ vocabList, careerTrack })
           });
           if (res.ok) {
             const data = await res.json();
@@ -1984,9 +1997,9 @@ export default function App() {
     }
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.lang = 'en-US';
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
@@ -1994,7 +2007,9 @@ export default function App() {
     };
 
     recognition.onresult = (event) => {
-      const speechToText = event.results[0][0].transcript;
+      const speechToText = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
       onResultCallback(speechToText);
     };
 
@@ -2011,21 +2026,69 @@ export default function App() {
     return recognition;
   };
 
-  const handleStartSpeakingPractice = () => {
+  const finalizeSpeakingScore = (finalText) => {
     const currentLesson = aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1];
     const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
     const currentPrompt = speakingData[currentSpeakingIndex] || speakingData[0];
     
+    const cleanUser = finalText.toLowerCase().replace(/[^\w\s]/g, '');
+    const cleanTarget = currentPrompt.prompt.toLowerCase().replace(/[^\w\s]/g, '');
+    const targetWords = cleanTarget.split(/\s+/).filter(w => w.length > 0);
+    const userWords = cleanUser.split(/\s+/).filter(w => w.length > 0);
+    
+    let matchCount = 0;
+    targetWords.forEach(w => {
+      if (userWords.includes(w)) matchCount++;
+    });
+    const calculatedScore = targetWords.length > 0 ? Math.round((matchCount / targetWords.length) * 100) : 0;
+    
+    let feedback = '';
+    if (calculatedScore >= 80) feedback = "Tuyệt vời! Bạn phát âm rất chuẩn xác.";
+    else if (calculatedScore >= 50) feedback = "Khá tốt! Cố gắng phát âm rõ chữ hơn một chút nhé.";
+    else feedback = "Chưa rõ lắm, bạn hãy thử đọc lại to và chậm hơn xem sao.";
+    
+    setSpeakingScore(calculatedScore);
+    setSpeakingFeedback(feedback);
+    setSpeakingResults(prev => ({
+      ...prev,
+      [currentSpeakingIndex]: { score: calculatedScore, text: finalText, feedback: feedback }
+    }));
+    
+    if (calculatedScore > 0) {
+      addXp(Math.round(calculatedScore / 5));
+      const newStats = {
+        ...performanceStats,
+        speaking_sum: (performanceStats?.speaking_sum || 0) + calculatedScore,
+        speaking_count: (performanceStats?.speaking_count || 0) + 1
+      };
+      setPerformanceStats(newStats);
+      setSpeakingPassScores(prev => ({ ...prev, [currentSpeakingIndex]: calculatedScore }));
+      syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
+    }
+  };
+
+  const handleStartSpeakingPractice = () => {
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      finalizeSpeakingScore(recognizedText);
+      return;
+    }
+    
+    setRecognizedText('');
+    setSpeakingScore(null);
+    setSpeakingFeedback('');
+    setSpeakingBetterVersion('');
+
     startSpeechRecognition((text) => {
       setRecognizedText(text);
-      setSpeakingScore('...');
-      setSpeakingFeedback('Đang đánh giá phát âm của bạn...');
-      setSpeakingBetterVersion('');
-
-      // Đánh giá đơn giản bằng cách đếm số từ trùng khớp
+      
+      // Auto-stop nếu đã đọc đúng 100% giống Duolingo
+      const currentLesson = aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1];
+      const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
+      const currentPrompt = speakingData[currentSpeakingIndex] || speakingData[0];
+      
       const cleanUser = text.toLowerCase().replace(/[^\w\s]/g, '');
       const cleanTarget = currentPrompt.prompt.toLowerCase().replace(/[^\w\s]/g, '');
-      
       const targetWords = cleanTarget.split(/\s+/).filter(w => w.length > 0);
       const userWords = cleanUser.split(/\s+/).filter(w => w.length > 0);
       
@@ -2033,31 +2096,10 @@ export default function App() {
       targetWords.forEach(w => {
         if (userWords.includes(w)) matchCount++;
       });
-      
-      const calculatedScore = targetWords.length > 0 ? Math.round((matchCount / targetWords.length) * 100) : 0;
-      
-      let feedback = '';
-      if (calculatedScore >= 80) feedback = "Tuyệt vời! Bạn phát âm rất chuẩn xác.";
-      else if (calculatedScore >= 50) feedback = "Khá tốt! Cố gắng phát âm rõ chữ hơn một chút nhé.";
-      else feedback = "Chưa rõ lắm, bạn hãy thử đọc lại to và chậm hơn xem sao.";
-
-      // Tạo độ trễ ảo cho mượt
-      setTimeout(() => {
-        setSpeakingScore(calculatedScore);
-        setSpeakingFeedback(feedback);
-        
-        if (calculatedScore > 0) {
-          addXp(Math.round(calculatedScore / 5));
-          const newStats = {
-            ...performanceStats,
-            speaking_sum: (performanceStats?.speaking_sum || 0) + calculatedScore,
-            speaking_count: (performanceStats?.speaking_count || 0) + 1
-          };
-          setPerformanceStats(newStats);
-          setSpeakingPassScores(prev => ({ ...prev, [currentSpeakingIndex]: calculatedScore }));
-          syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
-        }
-      }, 600);
+      if (matchCount === targetWords.length && matchCount > 0) {
+        if (recognitionRef.current) recognitionRef.current.stop();
+        finalizeSpeakingScore(text);
+      }
     });
   };
 
@@ -3615,8 +3657,17 @@ export default function App() {
                       <button 
                         disabled={currentSpeakingIndex === 0}
                         onClick={() => {
-                          setCurrentSpeakingIndex(Math.max(0, currentSpeakingIndex - 1));
-                          setSpeakingScore(null); setSpeakingFeedback(''); setSpeakingBetterVersion(''); setRecognizedText('');
+                          const newIndex = Math.max(0, currentSpeakingIndex - 1);
+                          setCurrentSpeakingIndex(newIndex);
+                          const result = speakingResults[newIndex];
+                          if (result) {
+                            setSpeakingScore(result.score);
+                            setSpeakingFeedback(result.feedback);
+                            setRecognizedText(result.text);
+                          } else {
+                            setSpeakingScore(null); setSpeakingFeedback(''); setRecognizedText('');
+                          }
+                          setSpeakingBetterVersion('');
                         }}
                         className={`p-2 rounded-full transition-all ${currentSpeakingIndex === 0 ? 'text-gray-300' : 'text-[#0071E3] hover:bg-blue-50 bg-white shadow-sm border border-gray-200'}`}
                       >
@@ -3630,8 +3681,17 @@ export default function App() {
                       <button 
                         disabled={currentSpeakingIndex === speakingData.length - 1}
                         onClick={() => {
-                          setCurrentSpeakingIndex(Math.min(speakingData.length - 1, currentSpeakingIndex + 1));
-                          setSpeakingScore(null); setSpeakingFeedback(''); setSpeakingBetterVersion(''); setRecognizedText('');
+                          const newIndex = Math.min(speakingData.length - 1, currentSpeakingIndex + 1);
+                          setCurrentSpeakingIndex(newIndex);
+                          const result = speakingResults[newIndex];
+                          if (result) {
+                            setSpeakingScore(result.score);
+                            setSpeakingFeedback(result.feedback);
+                            setRecognizedText(result.text);
+                          } else {
+                            setSpeakingScore(null); setSpeakingFeedback(''); setRecognizedText('');
+                          }
+                          setSpeakingBetterVersion('');
                         }}
                         className={`p-2 rounded-full transition-all ${currentSpeakingIndex === speakingData.length - 1 ? 'text-gray-300' : 'text-[#0071E3] hover:bg-blue-50 bg-white shadow-sm border border-gray-200'}`}
                       >
@@ -3641,8 +3701,18 @@ export default function App() {
 
                     <div className="text-center space-y-4 pt-12">
                       <span className="text-xs text-[#6E6E73] font-bold tracking-widest uppercase block">Read this sentence aloud:</span>
-                      <p className="text-2xl lg:text-3xl font-bold text-[#1D1D1F]">
-                        "{currentPrompt.prompt}"
+                      <p className="text-2xl lg:text-3xl font-bold text-[#1D1D1F] flex flex-wrap justify-center gap-2">
+                        {currentPrompt.prompt.split(/\s+/).map((word, wIdx) => {
+                          const cleanWord = word.toLowerCase().replace(/[^\w\s]/g, '');
+                          const cleanUser = recognizedText.toLowerCase().replace(/[^\w\s]/g, '');
+                          const userWords = cleanUser.split(/\s+/).filter(w => w.length > 0);
+                          const isMatched = userWords.includes(cleanWord);
+                          return (
+                            <span key={wIdx} className={`transition-colors duration-300 ${isMatched ? 'text-[#34C759]' : 'text-[#1D1D1F]'}`}>
+                              {word}
+                            </span>
+                          );
+                        })}
                       </p>
                       <p className="text-sm text-[#0071E3] font-medium">
                         Meaning: {currentPrompt.translation}

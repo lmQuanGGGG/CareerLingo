@@ -8,10 +8,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Chưa cấu hình GEMINI_API_KEY' }, { status: 500 });
     }
 
-    const { vocabList } = await request.json();
+    const { vocabList, careerTrack } = await request.json();
     const vocabWords = vocabList.map(v => v.word).join(', ');
 
-    const systemPrompt = `Bạn là một chuyên gia đào tạo nghiệp vụ khách sạn 5 sao quốc tế (Marriott standard) và giáo viên tiếng Anh.
+    const isIT = careerTrack === 'it';
+    const roleContext = isIT 
+      ? 'một chuyên gia IT, Project Manager, Scrum Master và giáo viên tiếng Anh chuyên ngành Công nghệ thông tin'
+      : 'một chuyên gia đào tạo nghiệp vụ khách sạn 5 sao quốc tế (Marriott standard) và giáo viên tiếng Anh';
+      
+    const envContext = isIT
+      ? 'Môi trường công sở IT, họp dự án phần mềm, Agile/Scrum'
+      : 'Khách sạn 5 sao sang trọng';
+
+    const systemPrompt = `Bạn là ${roleContext}.
 Dựa vào danh sách từ vựng được cung cấp, hãy sáng tạo một bài giảng (Lesson) chuyên nghiệp và sát thực tế.
 Yêu cầu trả về CHỈ BẰNG JSON ĐỊNH DẠNG SAU, không kèm markdown hay giải thích:
 {
@@ -59,7 +68,7 @@ Yêu cầu trả về CHỈ BẰNG JSON ĐỊNH DẠNG SAU, không kèm markdown
 }
 
 Quy định:
-- Hội thoại (dialogue) phải có ít nhất 4-6 câu, lồng ghép tự nhiên ít nhất 3-5 từ vựng trong danh sách. Ngữ cảnh: Khách sạn 5 sao sang trọng.
+- Hội thoại (dialogue) phải có ít nhất 4-6 câu, lồng ghép tự nhiên ít nhất 3-5 từ vựng trong danh sách. Ngữ cảnh: ${envContext}.
 - Phần listening.options phải có đúng 4 đáp án.
 - Mảng quiz phải có ĐÚNG 10 câu hỏi. Mỗi câu phải lấy 1 từ vựng trong danh sách, đưa ra nghĩa tiếng Việt của từ đó và yêu cầu nhập từ tiếng Anh. KHÔNG tạo câu trắc nghiệm, KHÔNG trả về mảng options cho quiz.
 - Đảm bảo tính logic, chuyên nghiệp, tiếng Anh chuẩn bản xứ.`;
