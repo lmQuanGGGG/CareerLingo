@@ -1595,7 +1595,7 @@ export default function App() {
 
   const checkAndCompleteDay = (newTasksObj) => {
     const tasks = newTasksObj[selectedDayId];
-    if (tasks?.vocab && tasks?.quiz && tasks?.speaking && tasks?.listening && !completedDays.includes(selectedDayId)) {
+    if (tasks?.vocab && tasks?.quiz && tasks?.listening && !completedDays.includes(selectedDayId)) {
       const newCompleted = [...completedDays, selectedDayId];
       setCompletedDays(newCompleted);
       
@@ -1643,26 +1643,6 @@ export default function App() {
     }
   }, [listeningPassFlags, selectedDayId, activeTab, dayTasks]);
 
-  useEffect(() => {
-    if (activeTab === 'lesson' && selectedDayId) {
-      const currentLesson = aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1];
-      const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
-      const totalSentences = speakingData.length;
-      
-      const scores = Object.values(speakingPassScores);
-      if (scores.length === totalSentences && totalSentences > 0) {
-        const avg = scores.reduce((a, b) => a + b, 0) / totalSentences;
-        if (avg > 70) {
-          const currentDayTasks = dayTasks[selectedDayId] || {};
-          if (!currentDayTasks.speaking) {
-            const newTasks = { ...dayTasks, [selectedDayId]: { ...currentDayTasks, speaking: true } };
-            setDayTasks(newTasks);
-            checkAndCompleteDay(newTasks);
-          }
-        }
-      }
-    }
-  }, [speakingPassScores, selectedDayId, activeTab, dayTasks, aiLessons]);
 
   const syncProgress = async (newXp, newStreak, newCompleted, newFavs, newScenarios, newAiLessons, newAvatarUrl, newDayTasks, newPerformanceStats, newCareerTrack, newDisplayName, didCompleteLessonToday = false) => {
     if (!user) return;
@@ -3149,7 +3129,6 @@ export default function App() {
                 {[
                   { id: 'vocab', label: "Vocabulary", icon: Languages },
                   { id: 'listening', label: "Listening", icon: Volume2 },
-                  { id: 'speaking', label: "Speaking", icon: Mic },
                   { id: 'quiz', label: "Quiz", icon: Trophy }
                 ].map((subTab) => {
                   const Icon = subTab.icon;
@@ -3639,131 +3618,6 @@ export default function App() {
                 </div>
               )}
 
-              {lessonActiveSubTab === 'speaking' && !isLessonLoading && (() => {
-                const currentLesson = aiLessons[selectedDayId] || CURRENT_LESSONS[selectedDayId] || CURRENT_LESSONS[1];
-                const speakingData = Array.isArray(currentLesson.speaking) ? currentLesson.speaking : [currentLesson.speaking];
-                const currentPrompt = speakingData[currentSpeakingIndex] || speakingData[0];
-                
-                return (
-                <div className="space-y-6">
-                  <div className="bg-[#FFFFFF]/90 border border-gray-100 rounded-[2rem] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-center">
-                    <h3 className="font-bold text-2xl mb-2 text-[#1D1D1F] tracking-tight">AI Pronunciation Check</h3>
-                    <p className="text-base text-[#6E6E73]">Use the microphone to receive instant feedback on your fluency.</p>
-                  </div>
-
-                  <div className="bg-[#FFFFFF]/90 border border-gray-100 p-8 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-8 relative">
-                    
-                    <div className="flex items-center justify-between absolute top-6 left-6 right-6">
-                      <button 
-                        disabled={currentSpeakingIndex === 0}
-                        onClick={() => {
-                          const newIndex = Math.max(0, currentSpeakingIndex - 1);
-                          setCurrentSpeakingIndex(newIndex);
-                          const result = speakingResults[newIndex];
-                          if (result) {
-                            setSpeakingScore(result.score);
-                            setSpeakingFeedback(result.feedback);
-                            setRecognizedText(result.text);
-                          } else {
-                            setSpeakingScore(null); setSpeakingFeedback(''); setRecognizedText('');
-                          }
-                          setSpeakingBetterVersion('');
-                        }}
-                        className={`p-2 rounded-full transition-all ${currentSpeakingIndex === 0 ? 'text-gray-300' : 'text-[#0071E3] hover:bg-blue-50 bg-white shadow-sm border border-gray-200'}`}
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      
-                      <span className="text-[10px] bg-[#F5F5F7] text-[#6E6E73] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-gray-200 shadow-inner">
-                        Câu {currentSpeakingIndex + 1} / {speakingData.length}
-                      </span>
-                      
-                      <button 
-                        disabled={currentSpeakingIndex === speakingData.length - 1}
-                        onClick={() => {
-                          const newIndex = Math.min(speakingData.length - 1, currentSpeakingIndex + 1);
-                          setCurrentSpeakingIndex(newIndex);
-                          const result = speakingResults[newIndex];
-                          if (result) {
-                            setSpeakingScore(result.score);
-                            setSpeakingFeedback(result.feedback);
-                            setRecognizedText(result.text);
-                          } else {
-                            setSpeakingScore(null); setSpeakingFeedback(''); setRecognizedText('');
-                          }
-                          setSpeakingBetterVersion('');
-                        }}
-                        className={`p-2 rounded-full transition-all ${currentSpeakingIndex === speakingData.length - 1 ? 'text-gray-300' : 'text-[#0071E3] hover:bg-blue-50 bg-white shadow-sm border border-gray-200'}`}
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    <div className="text-center space-y-4 pt-12">
-                      <span className="text-xs text-[#6E6E73] font-bold tracking-widest uppercase block">Read this sentence aloud:</span>
-                      <p className="text-2xl lg:text-3xl font-bold text-[#1D1D1F] flex flex-wrap justify-center gap-2">
-                        {currentPrompt.prompt.split(/\s+/).map((word, wIdx) => {
-                          const cleanWord = word.toLowerCase().replace(/[^\w\s]/g, '');
-                          const cleanUser = recognizedText.toLowerCase().replace(/[^\w\s]/g, '');
-                          const userWords = cleanUser.split(/\s+/).filter(w => w.length > 0);
-                          const isMatched = userWords.includes(cleanWord);
-                          return (
-                            <span key={wIdx} className={`transition-colors duration-300 ${isMatched ? 'text-[#34C759]' : 'text-[#1D1D1F]'}`}>
-                              {word}
-                            </span>
-                          );
-                        })}
-                      </p>
-                      <p className="text-sm text-[#0071E3] font-medium">
-                        Meaning: {currentPrompt.translation}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col items-center justify-center p-8 bg-[#F5F5F7] border border-gray-200 rounded-[2rem] space-y-5 max-w-lg mx-auto">
-                      <button
-                        onClick={handleStartSpeakingPractice}
-                        className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 ${isRecording ? 'bg-red-500 animate-pulse text-white shadow-xl shadow-red-500/30 scale-105' : 'bg-[#1D1D1F] hover:bg-[#333336] text-white shadow-lg shadow-black/20 hover:scale-105'}`}
-                      >
-                        {isRecording ? <Mic className="w-10 h-10 animate-spin" /> : <Mic className="w-10 h-10" />}
-                      </button>
-                      <div className="text-sm font-bold uppercase tracking-widest text-[#6E6E73]">
-                        {isRecording ? "Listening..." : "Tap to speak"}
-                      </div>
-                    </div>
-
-                    {recognizedText && (
-                      <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-3">
-                        <div className="text-xs font-bold text-[#6E6E73] uppercase tracking-widest">You said:</div>
-                        <p className="text-lg text-[#1D1D1F] font-medium">"{recognizedText}"</p>
-                      </div>
-                    )}
-
-                    {speakingScore !== null && (
-                      <div className="p-6 bg-white border border-gray-200 rounded-2xl space-y-4 shadow-sm">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold uppercase tracking-widest text-[#6E6E73]">AI Analysis</span>
-                          <div className="flex items-center gap-2 bg-[#F5F5F7] px-4 py-2 rounded-xl text-[#1D1D1F] text-base font-bold">
-                            <Star className={`w-5 h-5 ${speakingScore === '...' ? 'text-gray-400' : 'fill-amber-400 text-amber-400'}`} />
-                            {speakingScore} / 100 Score
-                          </div>
-                        </div>
-                        <p className="text-base text-[#1D1D1F] font-medium leading-relaxed">{speakingFeedback}</p>
-                        
-                        {speakingBetterVersion && (
-                          <div className="mt-4 p-4 bg-[#F5F5F7] border border-gray-200 rounded-xl">
-                            <div className="flex items-center gap-2 mb-2 text-sm font-bold text-[#0071E3] uppercase tracking-wide">
-                              <Sparkles className="w-4 h-4" />
-                              5-Star Upgrade
-                            </div>
-                            <p className="text-[#1D1D1F] font-medium italic">"{speakingBetterVersion}"</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-              )})()}
 
               {lessonActiveSubTab === 'quiz' && !isLessonLoading && (
                 <div className="space-y-6">
