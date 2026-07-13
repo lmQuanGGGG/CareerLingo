@@ -28,15 +28,6 @@ Yêu cầu trả về CHỈ BẰNG JSON ĐỊNH DẠNG SAU, không kèm markdown
     { "speaker": "Receptionist", "text": "..." },
     { "speaker": "Guest", "text": "..." }
   ],
-  "listening": {
-    "question": "Câu hỏi trắc nghiệm tiếng Anh về nội dung hội thoại?",
-    "options": ["đáp án 1", "đáp án 2", "đáp án 3", "đáp án 4"],
-    "answer": "đáp án đúng",
-    "blankSentence": "Một câu tiếng Anh trích từ hội thoại, có chứa 1 từ vựng bị thay bằng [blank].",
-    "blankAnswer": "từ vựng đúng",
-    "scrambled": ["từ", "lộn", "xộn", "của", "một", "câu", "khác", "trong", "hội thoại", "."],
-    "scrambledAnswer": "Câu hoàn chỉnh đúng ngữ pháp"
-  },
   "speaking": [
     {
       "prompt": "Câu tiếng Anh giao tiếp 1 (Dễ)",
@@ -69,7 +60,6 @@ Yêu cầu trả về CHỈ BẰNG JSON ĐỊNH DẠNG SAU, không kèm markdown
 
 Quy định:
 - Hội thoại (dialogue) phải có ít nhất 4-6 câu, lồng ghép tự nhiên ít nhất 3-5 từ vựng trong danh sách. Ngữ cảnh: ${envContext}.
-- Phần listening.options phải có đúng 4 đáp án.
 - Mảng quiz phải có ĐÚNG 10 câu hỏi. Mỗi câu phải lấy 1 từ vựng trong danh sách, đưa ra nghĩa tiếng Việt của từ đó và yêu cầu nhập từ tiếng Anh. KHÔNG tạo câu trắc nghiệm, KHÔNG trả về mảng options cho quiz.
 - Đảm bảo tính logic, chuyên nghiệp, tiếng Anh chuẩn bản xứ.`;
 

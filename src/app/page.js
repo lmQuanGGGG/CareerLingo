@@ -777,16 +777,6 @@ const HOSPITALITY_DATA = (() => {
       { speaker: "Receptionist", text: `It is my absolute pleasure. Everything regarding the ${vocab[4].word.toLowerCase()} is perfectly confirmed.` }
     ];
 
-    const listening = {
-      question: `Which specific item does the guest ask about in the conversation?`,
-      options: [vocab[1].word, vocab[5].word, vocab[6].word, vocab[7].word],
-      answer: vocab[1].word,
-      blankSentence: `I have a specific question about the [blank].`,
-      blankAnswer: vocab[1].word,
-      scrambled: ["I", "have", "a", "specific", "question", "about", "the", vocab[1].word + "."],
-      scrambledAnswer: `I have a specific question about the ${vocab[1].word}.`
-    };
-
     const speaking = [
       {
         prompt: `How may I assist you regarding the ${vocab[0].word.toLowerCase()} today?`,
@@ -816,7 +806,7 @@ const HOSPITALITY_DATA = (() => {
       quiz.push({ q: `Từ vựng tiếng Anh cho nghĩa "${v.mean}" là gì?`, a: v.word });
     }
 
-    lData[day] = { vocab, dialogue, listening, speaking, quiz };
+    lData[day] = { vocab, dialogue, speaking, quiz };
   }
 
   return { LESSONS_DATA: lData, VOCABULARY_BANK: vBank };
@@ -927,16 +917,6 @@ const IT_DATA = (() => {
       { speaker: "Project Manager", text: `It is my absolute pleasure. Everything regarding the ${vocab[4].word.toLowerCase()} is perfectly confirmed.` }
     ];
 
-    const listening = {
-      question: `Which specific item does the developer ask about in the conversation?`,
-      options: [vocab[1].word, vocab[5].word, vocab[6].word, vocab[7].word],
-      answer: vocab[1].word,
-      blankSentence: `I have a specific question about the [blank].`,
-      blankAnswer: vocab[1].word,
-      scrambled: ["I", "have", "a", "specific", "question", "about", "the", vocab[1].word + "."],
-      scrambledAnswer: `I have a specific question about the ${vocab[1].word}.`
-    };
-
     const speaking = [
       {
         prompt: `Can you update us on the ${vocab[0].word.toLowerCase()}?`,
@@ -966,7 +946,7 @@ const IT_DATA = (() => {
       quiz.push({ q: `Từ vựng tiếng Anh cho nghĩa "${v.mean}" là gì?`, a: v.word });
     }
 
-    lData[day] = { vocab, dialogue, listening, speaking, quiz };
+    lData[day] = { vocab, dialogue, speaking, quiz };
   }
 
   return { LESSONS_DATA: lData, VOCABULARY_BANK: vBank };
@@ -1100,9 +1080,7 @@ export default function App() {
   
   const [performanceStats, setPerformanceStats] = useState({
     speaking_sum: 0,
-    speaking_count: 0,
-    listening_sum: 0,
-    listening_count: 0
+    speaking_count: 0
   });
   const [showEgTranslation, setShowEgTranslation] = useState({});
 
@@ -1154,16 +1132,8 @@ export default function App() {
   const [selectedDayId, setSelectedDayId] = useState(1);
   const [lessonActiveSubTab, setLessonActiveSubTab] = useState('vocab');
   
-  const [listeningSelectedOption, setListeningSelectedOption] = useState(null);
-  const [listeningPassFlags, setListeningPassFlags] = useState({ mcq: false, blank: false, scramble: false });
   const [speakingPassScores, setSpeakingPassScores] = useState({});
   const [speakingResults, setSpeakingResults] = useState({});
-  const [listeningShowResult, setListeningShowResult] = useState(false);
-  const [listeningBlankInput, setListeningBlankInput] = useState('');
-  const [listeningBlankCorrect, setListeningBlankCorrect] = useState(null);
-  const [listeningScrambledWords, setListeningScrambledWords] = useState([]);
-  const [listeningScrambledResult, setListeningScrambledResult] = useState([]);
-  const [scrambledFeedback, setScrambledFeedback] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
 
   const [aiLessons, setAiLessons] = useState({});
@@ -1531,7 +1501,7 @@ export default function App() {
           let currentTrack = allTasks.careerTrack || 'hospitality';
           
           const dt = allTasks[currentTrack] || {};
-          let currentStats = allTasks.stats || { speaking_count: 0, speaking_sum: 0, listening_count: 0, listening_sum: 0, roleplays_today: 0, flashcards_today: 0, last_target_date: todayStr };
+          let currentStats = allTasks.stats || { speaking_count: 0, speaking_sum: 0, roleplays_today: 0, flashcards_today: 0, last_target_date: todayStr };
           
           if (currentStats.last_target_date !== todayStr) {
             currentStats.roleplays_today = 0;
@@ -1595,7 +1565,7 @@ export default function App() {
 
   const checkAndCompleteDay = (newTasksObj) => {
     const tasks = newTasksObj[selectedDayId];
-    if (tasks?.vocab && tasks?.quiz && tasks?.listening && !completedDays.includes(selectedDayId)) {
+    if (tasks?.vocab && tasks?.quiz && !completedDays.includes(selectedDayId)) {
       const newCompleted = [...completedDays, selectedDayId];
       setCompletedDays(newCompleted);
       
@@ -1631,18 +1601,6 @@ export default function App() {
       }
     }
   }, [quizAnswers, selectedDayId, activeTab]);
-
-  useEffect(() => {
-    if (activeTab === 'lesson' && selectedDayId && listeningPassFlags.mcq && listeningPassFlags.blank && listeningPassFlags.scramble) {
-      const currentDayTasks = dayTasks[selectedDayId] || {};
-      if (!currentDayTasks.listening) {
-        const newTasks = { ...dayTasks, [selectedDayId]: { ...currentDayTasks, listening: true } };
-        setDayTasks(newTasks);
-        checkAndCompleteDay(newTasks);
-      }
-    }
-  }, [listeningPassFlags, selectedDayId, activeTab, dayTasks]);
-
 
   const syncProgress = async (newXp, newStreak, newCompleted, newFavs, newScenarios, newAiLessons, newAvatarUrl, newDayTasks, newPerformanceStats, newCareerTrack, newDisplayName, didCompleteLessonToday = false) => {
     if (!user) return;
@@ -2359,12 +2317,6 @@ export default function App() {
     }
   };
 
-  const setupScrambledExercise = (lessonId) => {
-    const lData = aiLessons[lessonId] || CURRENT_LESSONS[lessonId] || CURRENT_LESSONS[1];
-    setListeningScrambledWords([...lData.listening.scrambled].sort(() => Math.random() - 0.5));
-    setListeningScrambledResult([]);
-  };
-
   useEffect(() => {
     if (activeTab === 'flashcards' && currentFlashcardOptions.length === 0 && shuffledFlashcards.length > 0) {
       setCurrentFlashcardOptions(generateVocabCheckOptions(shuffledFlashcards[0], CURRENT_VOCAB));
@@ -2372,13 +2324,7 @@ export default function App() {
   }, [activeTab]);
 
   useEffect(() => {
-    setupScrambledExercise(selectedDayId);
-    setListeningSelectedOption(null);
-    setListeningPassFlags({ mcq: false, blank: false, scramble: false });
     setSpeakingPassScores({});
-    setListeningShowResult(false);
-    setListeningBlankInput('');
-    setListeningBlankCorrect(null);
     setSpeakingScore(null);
     setSpeakingFeedback('');
     setSpeakingBetterVersion('');
@@ -2996,20 +2942,12 @@ export default function App() {
                     <h3 className="font-bold text-xl tracking-tight text-[#1D1D1F] mb-2">Performance Analytics</h3>
                     <p className="text-sm text-[#6E6E73] font-medium mb-6">Based on your learning progress.</p>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="grid grid-cols-2 gap-4 text-center">
                     <div className="bg-[#F5F5F7] p-4 rounded-2xl">
                       <div className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wider mb-1">Speaking</div>
                       <div className="text-2xl font-bold text-[#1D1D1F]">
                         {performanceStats.speaking_count > 0 
                           ? Math.round(performanceStats.speaking_sum / performanceStats.speaking_count) 
-                          : 0}%
-                      </div>
-                    </div>
-                    <div className="bg-[#F5F5F7] p-4 rounded-2xl">
-                      <div className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wider mb-1">Listening</div>
-                      <div className="text-2xl font-bold text-[#1D1D1F]">
-                        {performanceStats.listening_count > 0 
-                          ? Math.round(performanceStats.listening_sum / performanceStats.listening_count) 
                           : 0}%
                       </div>
                     </div>
@@ -3054,7 +2992,7 @@ export default function App() {
                             if (!isLocked) {
                               if (selectedDayId !== day.id) {
                                 const tasks = dayTasks[day.id] || {};
-                                const order = ['vocab', 'listening', 'speaking', 'quiz'];
+                                const order = ['vocab', 'quiz'];
                                 const resumeTab = order.find(t => !tasks[t]) || 'vocab';
                                 setLessonActiveSubTab(resumeTab);
                                 // Also clear quiz state when switching days to prevent answers from leaking
@@ -3128,7 +3066,6 @@ export default function App() {
               <div className="flex overflow-x-auto gap-2 no-scrollbar bg-[#FFFFFF]/90 p-2 rounded-2xl shadow-sm border border-gray-100">
                 {[
                   { id: 'vocab', label: "Vocabulary", icon: Languages },
-                  { id: 'listening', label: "Listening", icon: Volume2 },
                   { id: 'quiz', label: "Quiz", icon: Trophy }
                 ].map((subTab) => {
                   const Icon = subTab.icon;
@@ -3406,218 +3343,6 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-              {lessonActiveSubTab === 'listening' && !isLessonLoading && (
-                <div className="space-y-6">
-                  <div className="bg-[#FFFFFF]/90 border border-gray-100 rounded-[2rem] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-center">
-                    <h3 className="font-bold text-2xl mb-2 text-[#1D1D1F] tracking-tight">Listening Practice</h3>
-                    <p className="text-base text-[#6E6E73]">Improve your comprehension with varied exercises.</p>
-                  </div>
-
-                  <div className="bg-[#FFFFFF]/90 border border-gray-100 p-8 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs bg-[#F5F5F7] text-[#6E6E73] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-gray-200">Exercise 1: Multiple Choice</span>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => translateDialogLine((aiLessons[selectedDayId]?.dialogue || CURRENT_LESSONS[selectedDayId]?.dialogue || CURRENT_LESSONS[1].dialogue).map(d => d.text).join(" "), `listening-full-${selectedDayId}`)}
-                          disabled={isTranslatingDialog[`listening-full-${selectedDayId}`]}
-                          className="flex items-center gap-2 text-sm font-bold text-[#FF9500] bg-[#FF9500]/10 hover:bg-[#FF9500]/20 transition-all px-4 py-2 rounded-xl disabled:opacity-50"
-                        >
-                          <Languages className={`w-4 h-4 ${isTranslatingDialog[`listening-full-${selectedDayId}`] ? 'animate-spin' : ''}`} /> 
-                          {isTranslatingDialog[`listening-full-${selectedDayId}`] ? 'Đang dịch...' : 'Dịch bài nghe'}
-                        </button>
-                        <button 
-                          onClick={() => speakText((aiLessons[selectedDayId]?.dialogue || CURRENT_LESSONS[selectedDayId]?.dialogue || CURRENT_LESSONS[1].dialogue).map(d => d.text).join(" "))}
-                          className="flex items-center gap-2 text-sm font-bold text-[#1D1D1F] bg-[#F5F5F7] hover:bg-gray-200 transition-all px-4 py-2 rounded-xl"
-                        >
-                          <Volume2 className="w-4 h-4" /> Play Full Audio
-                        </button>
-                      </div>
-                    </div>
-
-                    {dialogTranslations[`listening-full-${selectedDayId}`] && (
-                      <div className="mb-6 p-5 bg-[#FF9500]/10 rounded-2xl border-2 border-[#FF9500] animate-fadeIn shadow-inner relative group">
-                        <button 
-                          onClick={() => clearDialogTranslation(`listening-full-${selectedDayId}`)}
-                          className="absolute top-3 right-3 p-1.5 text-orange-400 hover:text-orange-600 hover:bg-orange-100/50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                          title="Đóng bản dịch"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                        <h4 className="text-sm font-bold uppercase text-[#FF9500] tracking-widest mb-2 flex items-center gap-2">
-                          <Languages className="w-4 h-4" /> Bản dịch Audio:
-                        </h4>
-                        <p className="text-base text-[#1D1D1F] leading-relaxed font-medium">{dialogTranslations[`listening-full-${selectedDayId}`]}</p>
-                      </div>
-                    )}
-
-                    <h4 className="font-bold text-lg text-[#1D1D1F]">{(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).question}</h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      {(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).options.map((opt, idx) => {
-                        const isCorrect = opt === (aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).answer;
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              if (listeningShowResult) return;
-                              setListeningSelectedOption(opt);
-                              setListeningShowResult(true);
-                              if (isCorrect) {
-                                addXp(20);
-                                setListeningPassFlags(prev => ({ ...prev, mcq: true }));
-                              }
-                              const newStats = {
-                                ...performanceStats,
-                                listening_sum: (performanceStats?.listening_sum || 0) + (isCorrect ? 100 : 0),
-                                listening_count: (performanceStats?.listening_count || 0) + 1
-                              };
-                              setPerformanceStats(newStats);
-                              syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
-                            }}
-                            className={`p-5 rounded-2xl border text-left text-base font-semibold transition-all ${listeningShowResult ? (isCorrect ? 'bg-green-50 border-green-500 text-green-700' : 'bg-red-50 border-red-300 text-red-600') : (listeningSelectedOption === opt ? 'bg-[#0071E3]/10 border-[#0071E3] text-[#0071E3]' : 'bg-white border-gray-200 hover:border-gray-400')}`}
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="bg-[#FFFFFF]/90 border border-gray-100 p-8 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-5">
-                    <span className="text-xs bg-[#F5F5F7] text-[#6E6E73] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-gray-200 inline-block">Exercise 2: Fill Blank</span>
-                    <h4 className="font-bold text-lg text-[#1D1D1F]">Listen and type the missing word:</h4>
-                    
-                    <p className="p-5 bg-[#F5F5F7] rounded-2xl text-[#1D1D1F] text-lg italic border border-gray-200">
-                      "{(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).blankSentence}"
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
-                      <input 
-                        type="text"
-                        lang="en"
-                        autoCapitalize="none"
-                        autoCorrect="off"
-                        spellCheck="false"
-                        value={listeningBlankInput}
-                        onChange={(e) => setListeningBlankInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.target.blur();
-                          }
-                        }}
-                        placeholder="Type the word..."
-                        className="bg-white border border-gray-300 rounded-xl px-5 py-3 text-base font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] flex-1 shadow-sm"
-                      />
-                      <button
-                        onClick={() => {
-                          const isCorrect = listeningBlankInput.trim().toLowerCase() === (aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).blankAnswer.toLowerCase();
-                          setListeningBlankCorrect(isCorrect);
-                          if (isCorrect) {
-                             addXp(25);
-                             setListeningPassFlags(prev => ({ ...prev, blank: true }));
-                          }
-                          const newStats = {
-                            ...performanceStats,
-                            listening_sum: (performanceStats?.listening_sum || 0) + (isCorrect ? 100 : 0),
-                            listening_count: (performanceStats?.listening_count || 0) + 1
-                          };
-                          setPerformanceStats(newStats);
-                          syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
-                        }}
-                        className="bg-[#1D1D1F] hover:bg-[#333336] text-white font-bold px-6 py-3 rounded-xl text-sm transition-all shadow-md"
-                      >
-                        Check
-                      </button>
-                    </div>
-
-                    {listeningBlankCorrect !== null && (
-                      <div className={`flex items-center gap-2 text-base font-bold ${listeningBlankCorrect ? 'text-green-600' : 'text-red-500'}`}>
-                        {listeningBlankCorrect ? "✓ Excellent! +25 XP." : `✗ Incorrect. The answer is: "${(aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).blankAnswer}"`}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-[#FFFFFF]/90 border border-gray-100 p-8 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-5">
-                    <span className="text-xs bg-[#F5F5F7] text-[#6E6E73] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-gray-200 inline-block">Exercise 3: Scramble</span>
-                    <h4 className="font-bold text-lg text-[#1D1D1F]">Reorder the words to form the correct sentence:</h4>
-
-                    <div className="min-h-16 p-4 bg-[#F5F5F7] border border-gray-200 rounded-2xl flex flex-wrap gap-2 items-center">
-                      {listeningScrambledResult.map((word, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setListeningScrambledWords([...listeningScrambledWords, word]);
-                            setListeningScrambledResult(listeningScrambledResult.filter((_, i) => i !== idx));
-                          }}
-                          className="bg-white text-[#1D1D1F] font-bold text-sm px-4 py-2 rounded-xl border border-gray-300 hover:border-gray-400 hover:scale-95 transition-all shadow-sm"
-                        >
-                          {word}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-3">
-                      {listeningScrambledWords.map((word, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setListeningScrambledResult([...listeningScrambledResult, word]);
-                            setListeningScrambledWords(listeningScrambledWords.filter((_, i) => i !== idx));
-                          }}
-                          className="bg-white text-[#6E6E73] font-medium text-sm px-4 py-2 rounded-xl border border-gray-200 hover:border-gray-400 hover:text-[#1D1D1F] transition-all shadow-sm"
-                        >
-                          {word}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 w-full">
-                      <button 
-                        onClick={() => {
-                          const sentence = listeningScrambledResult.join(' ');
-                          const standard = (aiLessons[selectedDayId]?.listening || CURRENT_LESSONS[selectedDayId]?.listening || CURRENT_LESSONS[1].listening).scrambledAnswer;
-                          const isCorrect = sentence === standard;
-                          if (isCorrect) {
-                            setScrambledFeedback({ type: 'success', text: 'Chính xác! Excellent job forming the sentence. (+30 XP)' });
-                            addXp(30);
-                            setListeningPassFlags(prev => ({ ...prev, scramble: true }));
-                          } else {
-                            setScrambledFeedback({ type: 'error', text: 'Sai thứ tự rồi. Hãy nhấn Reset để thử lại!' });
-                          }
-                          const newStats = {
-                            ...performanceStats,
-                            listening_sum: (performanceStats?.listening_sum || 0) + (isCorrect ? 100 : 0),
-                            listening_count: (performanceStats?.listening_count || 0) + 1
-                          };
-                          setPerformanceStats(newStats);
-                          syncProgress(undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, newStats);
-                        }}
-                        className="bg-[#0071E3] hover:bg-[#005bb5] text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-md"
-                      >
-                        Submit Answer
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setupScrambledExercise(selectedDayId);
-                          setScrambledFeedback(null);
-                        }}
-                        className="bg-gray-100 hover:bg-gray-200 text-[#1D1D1F] font-bold text-sm px-6 py-3 rounded-xl transition-all"
-                      >
-                        Reset
-                      </button>
-                    </div>
-                    {scrambledFeedback && (
-                      <div className={`mt-4 p-4 rounded-xl text-sm font-semibold flex items-center gap-2 ${scrambledFeedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {scrambledFeedback.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <X className="w-5 h-5" />}
-                        {scrambledFeedback.text}
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-              )}
-
 
               {lessonActiveSubTab === 'quiz' && !isLessonLoading && (
                 <div className="space-y-6">
